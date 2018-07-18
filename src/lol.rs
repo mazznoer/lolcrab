@@ -2,6 +2,7 @@ use rand::random;
 use std::f64::consts::PI;
 use std::io;
 use std::io::prelude::*;
+use structopt::StructOpt;
 use termcolor::{Color, ColorSpec, WriteColor};
 
 #[derive(StructOpt)]

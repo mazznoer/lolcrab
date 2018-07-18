@@ -1,13 +1,10 @@
-extern crate rand;
-#[macro_use]
-extern crate structopt;
-extern crate termcolor;
+#![feature(rust_2018_preview, use_extern_macros)]
 
 mod ansi_escape;
 mod lol;
 
-use ansi_escape::AnsiEscaper;
-use lol::{LolOpts, RainbowWriter};
+use crate::ansi_escape::AnsiEscaper;
+use crate::lol::{LolOpts, RainbowWriter};
 use std::fs::File;
 use std::io;
 use std::io::BufReader;
@@ -31,7 +28,8 @@ fn main() -> Result<(), io::Error> {
     let opt = Cmdline::from_args();
 
     let outstream = StandardStream::stdout(ColorChoice::Always);
-    let mut out = RainbowWriter::with_lol_opts(AnsiEscaper::new(outstream.lock()), &opt.lol_options);
+    let mut out =
+        RainbowWriter::with_lol_opts(AnsiEscaper::new(outstream.lock()), &opt.lol_options);
 
     if let Some(path) = opt.input {
         let f = File::open(path)?;
