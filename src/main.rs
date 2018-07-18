@@ -1,58 +1,47 @@
 extern crate rand;
+#[macro_use]
+extern crate structopt;
 extern crate termcolor;
 
-use std::f64::consts::PI;
+mod ansi_escape;
+mod lol;
+
+use ansi_escape::AnsiEscaper;
+use lol::{LolOpts, RainbowWriter};
+use std::fs::File;
 use std::io;
-use std::io::prelude::*;
-use rand::random;
-use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
+use std::io::BufReader;
+use structopt::StructOpt;
+use termcolor::{ColorChoice, StandardStream};
 
-#[derive(Eq, PartialEq)]
-enum EscapeStatus {
-    NoEscape,
-    Escape,
-}
+use std::path::PathBuf;
 
-fn rainbow(width: u64, height: u64) -> Color {
-    let freq_width: f64 = 0.1;
-    let freq_height: f64 = 0.23;
+#[derive(StructOpt)]
+#[structopt(name = "lolcat", about = "Terminal rainbows.")]
+struct Cmdline {
+    /// Input file
+    #[structopt(parse(from_os_str))]
+    input: Option<PathBuf>,
 
-    let position = width as f64 * freq_width + height as f64 * freq_height;
-
-    let red = position.sin() * 127.0 + 128.0;
-    let green = (position + 2.0 * PI / 3.0).sin() * 127.0 + 128.0;
-    let blue = (position + 4.0 * PI / 3.0).sin() * 127.0 + 128.0;
-    Color::Rgb(red as u8, green as u8, blue as u8)
+    #[structopt(flatten)]
+    lol_options: LolOpts,
 }
 
 fn main() -> Result<(), io::Error> {
-    let stdin = io::stdin();
-    let input = stdin.lock();
+    let opt = Cmdline::from_args();
 
     let outstream = StandardStream::stdout(ColorChoice::Always);
-    let mut stdout = outstream.lock();
+    let mut out = RainbowWriter::with_lol_opts(AnsiEscaper::new(outstream.lock()), &opt.lol_options);
 
-    let mut color_struct = ColorSpec::new();
-    let mut line_count = u64::from(random::<u8>());
-    let mut char_count = 0;
-    let mut escape_state = EscapeStatus::NoEscape;
-    for byte in input.bytes().filter_map(|b| b.ok()) {
-        if byte == 0x1B {
-            escape_state = EscapeStatus::Escape;
-        } else if escape_state == EscapeStatus::Escape {
-            if (b'a' <= byte && byte <= b'z') || (b'A' <= byte && byte <= b'Z') {
-                escape_state = EscapeStatus::NoEscape;
-            }
-        } else if byte == b'\n' {
-            line_count += 1;
-            char_count = 0;
-        } else {
-            let color = rainbow(line_count, char_count);
-            color_struct.set_fg(Some(color));
-            stdout.set_color(&color_struct)?;
-        }
-
-        stdout.write_all(&[byte])?;
+    if let Some(path) = opt.input {
+        let f = File::open(path)?;
+        let mut file = BufReader::new(&f);
+        io::copy(&mut file, &mut out)?;
+    } else {
+        let stdin = io::stdin();
+        let mut input = stdin.lock();
+        io::copy(&mut input, &mut out)?;
     }
+
     Ok(())
 }
