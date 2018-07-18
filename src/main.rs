@@ -9,7 +9,7 @@ use std::fs::File;
 use std::io;
 use std::io::BufReader;
 use structopt::StructOpt;
-use termcolor::{ColorChoice, StandardStream};
+use termcolor::{ColorChoice, StandardStream, WriteColor};
 
 use std::path::PathBuf;
 
@@ -40,6 +40,8 @@ fn main() -> Result<(), io::Error> {
         let mut input = stdin.lock();
         io::copy(&mut input, &mut out)?;
     }
+
+    out.reset()?;
 
     Ok(())
 }
