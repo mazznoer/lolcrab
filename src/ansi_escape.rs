@@ -30,12 +30,15 @@ impl<T: Write + WriteColor> io::Write for AnsiEscaper<T> {
         }
         self.writer.write(buffer)
     }
+
+    #[inline]
     fn flush(&mut self) -> io::Result<()> {
         self.writer.flush()
     }
 }
 
 impl<T: Write + WriteColor> WriteColor for AnsiEscaper<T> {
+    #[inline]
     fn supports_color(&self) -> bool {
         self.writer.supports_color()
     }
@@ -45,6 +48,7 @@ impl<T: Write + WriteColor> WriteColor for AnsiEscaper<T> {
         }
         Ok(())
     }
+    #[inline]
     fn reset(&mut self) -> io::Result<()> {
         self.writer.reset()
     }

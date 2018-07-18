@@ -82,18 +82,22 @@ impl<T: Write + WriteColor> io::Write for RainbowWriter<T> {
         }
         Ok(written)
     }
+    #[inline]
     fn flush(&mut self) -> io::Result<()> {
         self.writer.flush()
     }
 }
 
 impl<T: Write + WriteColor> WriteColor for RainbowWriter<T> {
+    #[inline]
     fn supports_color(&self) -> bool {
         self.writer.supports_color()
     }
+    #[inline]
     fn set_color(&mut self, spec: &ColorSpec) -> io::Result<()> {
         self.writer.set_color(spec)
     }
+    #[inline]
     fn reset(&mut self) -> io::Result<()> {
         self.writer.reset()
     }
