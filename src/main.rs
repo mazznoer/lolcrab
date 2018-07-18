@@ -31,8 +31,8 @@ fn main() -> Result<(), io::Error> {
     let mut out =
         RainbowWriter::with_lol_opts(AnsiEscaper::new(outstream.lock()), &opt.lol_options);
 
-    if let Some(path) = opt.input {
-        let f = File::open(path)?;
+    if opt.input.is_some() && Some("-".into()) != opt.input {
+        let f = File::open(opt.input.unwrap())?;
         let mut file = BufReader::new(&f);
         io::copy(&mut file, &mut out)?;
     } else {
