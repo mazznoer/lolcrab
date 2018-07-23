@@ -12,13 +12,13 @@ pub struct RainbowOpts {
     #[structopt(short = "s", long = "seed")]
     seed: Option<u8>,
     // How much to grow on the x-Axis
-    #[structopt(short = "w", long = "frequency-width", default_value = "0.1")]
+    #[structopt(short = "w", long = "frequency-width", default_value = "0.05")]
     frequency_width: f64,
     // How much to grow on the y-Axis
     #[structopt(
         short = "h",
         long = "frequency-height",
-        default_value = "0.23"
+        default_value = "0.1"
     )]
     frequency_height: f64,
 }
