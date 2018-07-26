@@ -2,12 +2,12 @@
 
 mod rainbow;
 
+#[cfg(windows)]
+use ansi_term;
 use crate::rainbow::{RainbowOpts, RainbowWriter};
 use std::fs::File;
-use std::io;
-use std::io::{BufRead, BufReader};
+use std::io::{self, BufRead, BufReader, LineWriter};
 use structopt::StructOpt;
-use termcolor::{ColorChoice, StandardStream};
 
 use std::path::PathBuf;
 
@@ -23,6 +23,8 @@ struct Cmdline {
 }
 
 fn main() -> Result<(), io::Error> {
+    #[cfg(windows)]
+    ansi_term::enable_ansi_support().unwrap();
     let opt = Cmdline::from_args();
 
     let stdin = io::stdin();
@@ -33,8 +35,9 @@ fn main() -> Result<(), io::Error> {
         Box::new(stdin.lock())
     };
 
-    let outstream = StandardStream::stdout(ColorChoice::Always);
+    let stdout = io::stdout();
+    let writer = LineWriter::new(stdout.lock());
 
-    let rainbow = RainbowWriter::with_opts(outstream.lock(), input, &opt.lol_options);
+    let rainbow = RainbowWriter::with_opts(input, writer, &opt.lol_options);
     rainbow.rainbow_copy()
 }

@@ -3,7 +3,6 @@ use std::f64::consts::PI;
 use std::io;
 use std::io::prelude::*;
 use structopt::StructOpt;
-use termcolor::{Color, ColorSpec, WriteColor};
 use unicode_reader::Graphemes;
 use vte;
 
@@ -28,36 +27,36 @@ pub struct RainbowOpts {
     frequency_height: f64,
 }
 
-struct Performer<T: Write + WriteColor> {
-    writer: T,
+struct RainbowState {
     line: u64,
     character: u64,
     frequency_width: f64,
     frequency_height: f64,
     seed: u8,
-    color_spec: ColorSpec,
+    print_color: bool,
 }
 
-pub struct RainbowWriter<R: BufRead, W: Write + WriteColor> {
-    performer: Performer<W>,
+pub struct RainbowWriter<R: Read, W: Write> {
+    rainbow_state: RainbowState,
+    writer: W,
     reader: R,
-    parser: vte::Parser,
+    vte_parser: vte::Parser,
 }
 
-impl<W: Write + WriteColor, R: BufRead> RainbowWriter<R, W> {
-    pub fn with_opts(writer: W, reader: R, opts: &RainbowOpts) -> RainbowWriter<R, W> {
+impl<W: Write, R: BufRead> RainbowWriter<R, W> {
+    pub fn with_opts(reader: R, writer: W, opts: &RainbowOpts) -> RainbowWriter<R, W> {
         RainbowWriter {
             reader,
-            performer: Performer {
-                writer,
+            writer,
+            rainbow_state: RainbowState {
                 seed: opts.seed.unwrap_or_else(random),
                 frequency_width: opts.frequency_width,
                 frequency_height: opts.frequency_height,
                 line: 0,
                 character: 0,
-                color_spec: ColorSpec::new(),
+                print_color: true,
             },
-            parser: vte::Parser::new(),
+            vte_parser: vte::Parser::new(),
         }
     }
 
@@ -66,21 +65,26 @@ impl<W: Write + WriteColor, R: BufRead> RainbowWriter<R, W> {
         for g in graphemes {
             let grapheme = g?;
             if grapheme.len() == 1 {
-                self.parser
-                    .advance(&mut self.performer, *grapheme.as_bytes().get(0).unwrap());
+                self.rainbow_state.print_color = false;
+                self.vte_parser
+                    .advance(&mut self.rainbow_state, *grapheme.as_bytes().get(0).unwrap());
+                if !self.rainbow_state.print_color {
+                    self.writer.write_all(grapheme.as_bytes())?;
+                    continue;
+                }
             } else {
-                self.performer.next_color();
-                self.performer.character += 1;
+                self.rainbow_state.character += 1;
             }
 
-            self.performer.writer.write_all(grapheme.as_bytes())?;
+            let (r, g, b) = self.rainbow_state.next_color();
+            write!(self.writer, "\x1B[38;2;{};{};{}m{}", r, g, b, grapheme)?;
         }
-        self.performer.writer.reset()
+        self.writer.write_all(b"\x1B[0m")
     }
 }
 
-impl<T: Write + WriteColor> Performer<T> {
-    fn next_color(&mut self) {
+impl RainbowState {
+    fn next_color(&mut self) -> (u8, u8, u8) {
         let position = self.character as f64 * self.frequency_width
             + self.line as f64 * self.frequency_height
             + f64::from(self.seed);
@@ -89,10 +93,7 @@ impl<T: Write + WriteColor> Performer<T> {
         let green = (position + 2.0 * PI / 3.0).sin() * 127.0 + 128.0;
         let blue = (position + 4.0 * PI / 3.0).sin() * 127.0 + 128.0;
 
-        let color = Color::Rgb(red as u8, green as u8, blue as u8);
-
-        self.color_spec.set_fg(Some(color));
-        self.writer.set_color(&self.color_spec).unwrap();
+        (red as u8, green as u8, blue as u8)
     }
 
     fn add_line(&mut self, x: u64) {
@@ -120,9 +121,9 @@ impl<T: Write + WriteColor> Performer<T> {
     }
 }
 
-impl<T: Write + WriteColor> vte::Perform for Performer<T> {
+impl vte::Perform for RainbowState {
     fn print(&mut self, _c: char) {
-        self.next_color();
+        self.print_color = true;
         self.character += 1;
     }
 

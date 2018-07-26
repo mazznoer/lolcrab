@@ -2,13 +2,15 @@ cargo-features = ["edition"]
 
 [package]
 name = "lolcat"
-version = "0.4.0"
+version = "0.5.0"
 authors = ["David Knaack <davidkna@users.noreply.github.com>"]
 edition = "2018"
 
 [dependencies]
 rand = "0.5.4"
 structopt = "0.2.10"
-termcolor = "1.0.1"
 unicode_reader = "0.1.1"
 vte = "0.3.2"
+
+[target.'cfg(windows)'.dependencies]
+ansi_term = "0.11"
