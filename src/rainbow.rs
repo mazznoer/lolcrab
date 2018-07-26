@@ -4,6 +4,7 @@ use std::io;
 use std::io::prelude::*;
 use structopt::StructOpt;
 use termcolor::{Color, ColorSpec, WriteColor};
+use unicode_reader::Graphemes;
 use vte;
 
 #[derive(StructOpt)]
@@ -12,7 +13,11 @@ pub struct RainbowOpts {
     #[structopt(short = "s", long = "seed")]
     seed: Option<u8>,
     // How much to grow on the x-Axis
-    #[structopt(short = "w", long = "frequency-width", default_value = "0.05")]
+    #[structopt(
+        short = "w",
+        long = "frequency-width",
+        default_value = "0.05"
+    )]
     frequency_width: f64,
     // How much to grow on the y-Axis
     #[structopt(
@@ -33,14 +38,16 @@ struct Performer<T: Write + WriteColor> {
     color_spec: ColorSpec,
 }
 
-pub struct RainbowWriter<T: Write + WriteColor> {
-    performer: Performer<T>,
+pub struct RainbowWriter<R: BufRead, W: Write + WriteColor> {
+    performer: Performer<W>,
+    reader: R,
     parser: vte::Parser,
 }
 
-impl<T: Write + WriteColor> RainbowWriter<T> {
-    pub fn with_opts(writer: T, opts: &RainbowOpts) -> RainbowWriter<T> {
+impl<W: Write + WriteColor, R: BufRead> RainbowWriter<R, W> {
+    pub fn with_opts(writer: W, reader: R, opts: &RainbowOpts) -> RainbowWriter<R, W> {
         RainbowWriter {
+            reader,
             performer: Performer {
                 writer,
                 seed: opts.seed.unwrap_or_else(random),
@@ -52,6 +59,23 @@ impl<T: Write + WriteColor> RainbowWriter<T> {
             },
             parser: vte::Parser::new(),
         }
+    }
+
+    pub fn rainbow_copy(mut self) -> Result<(), io::Error> {
+        let graphemes = Graphemes::from(self.reader);
+        for g in graphemes {
+            let grapheme = g?;
+            if grapheme.len() == 1 {
+                self.parser
+                    .advance(&mut self.performer, *grapheme.as_bytes().get(0).unwrap());
+            } else {
+                self.performer.next_color();
+                self.performer.character += 1;
+            }
+
+            self.performer.writer.write_all(grapheme.as_bytes())?;
+        }
+        self.performer.writer.reset()
     }
 }
 
@@ -77,7 +101,8 @@ impl<T: Write + WriteColor> Performer<T> {
 
     fn sub_line(&mut self, x: u64) {
         if self.line > x {
-            self.line = self.line - x;
+            self.line -= x;
+            return;
         }
         self.line = 0;
     }
@@ -88,7 +113,8 @@ impl<T: Write + WriteColor> Performer<T> {
 
     fn sub_char(&mut self, x: u64) {
         if self.character > x {
-            self.character = self.character - x;
+            self.character -= x;
+            return;
         }
         self.character = 0;
     }
@@ -172,25 +198,4 @@ impl<T: Write + WriteColor> vte::Perform for Performer<T> {
     fn put(&mut self, _byte: u8) {}
     fn unhook(&mut self) {}
     fn osc_dispatch(&mut self, _params: &[&[u8]]) {}
-}
-
-impl<T: Write + WriteColor> io::Write for RainbowWriter<T> {
-    fn write(&mut self, buffer: &[u8]) -> io::Result<usize> {
-        let mut written = 0;
-        for byte in buffer {
-            self.parser.advance(&mut self.performer, *byte);
-            written += self.performer.writer.write(&[*byte])?;
-        }
-        Ok(written)
-    }
-    #[inline]
-    fn flush(&mut self) -> io::Result<()> {
-        self.performer.writer.flush()
-    }
-}
-
-impl<T: Write + WriteColor> Drop for RainbowWriter<T> {
-    fn drop(&mut self) {
-        self.performer.writer.reset().unwrap();
-    }
 }
