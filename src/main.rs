@@ -4,9 +4,9 @@ mod rainbow;
 
 #[cfg(windows)]
 use ansi_term;
-use crate::rainbow::RainbowWriter;
+use crate::rainbow::{RainbowOpts, RainbowWriter};
 use std::fs::File;
-use std::io::{self, BufReader};
+use std::io::{self, BufRead, BufReader};
 use structopt::StructOpt;
 
 use std::path::PathBuf;
@@ -19,7 +19,7 @@ struct Cmdline {
     input: Option<PathBuf>,
 
     #[structopt(flatten)]
-    rainbow_writer: RainbowWriter,
+    lol_options: RainbowOpts,
 }
 
 fn main() -> Result<(), io::Error> {
@@ -27,14 +27,17 @@ fn main() -> Result<(), io::Error> {
     ansi_term::enable_ansi_support().unwrap();
     let opt = Cmdline::from_args();
 
-    let stdout = io::stdout();
-    let out = stdout.lock();
-    if opt.input.is_some() && Some("-".into()) != opt.input {
+    let stdin = io::stdin();
+    let input: Box<BufRead> = if opt.input.is_some() && Some("-".into()) != opt.input {
         let f = File::open(opt.input.unwrap())?;
-        opt.rainbow_writer.rainbow_copy(BufReader::new(f), out)
+        Box::new(BufReader::new(f))
     } else {
-        let stdin = io::stdin();
-        let stdin_lock = stdin.lock();
-        opt.rainbow_writer.rainbow_copy(stdin_lock, out)
-    }
+        Box::new(stdin.lock())
+    };
+
+    let stdout = io::stdout();
+    let writer = stdout.lock();
+
+    let rainbow = RainbowWriter::with_opts(input, writer, &opt.lol_options);
+    rainbow.rainbow_copy()
 }
