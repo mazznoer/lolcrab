@@ -6,7 +6,7 @@ mod rainbow;
 use ansi_term;
 use crate::rainbow::{RainbowOpts, RainbowWriter};
 use std::fs::File;
-use std::io::{self, BufRead, BufReader, LineWriter};
+use std::io::{self, BufRead, BufReader};
 use structopt::StructOpt;
 
 use std::path::PathBuf;
@@ -36,7 +36,7 @@ fn main() -> Result<(), io::Error> {
     };
 
     let stdout = io::stdout();
-    let writer = LineWriter::new(stdout.lock());
+    let writer = stdout.lock();
 
     let rainbow = RainbowWriter::with_opts(input, writer, &opt.lol_options);
     rainbow.rainbow_copy()
