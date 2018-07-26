@@ -18,6 +18,10 @@ struct Cmdline {
     #[structopt(parse(from_os_str))]
     input: Option<PathBuf>,
 
+    // If ANSI sequences should evaluated
+    #[structopt(short = "A", long = "skip-ansi", help = "Don't evalute ANSI sequences in input")]
+    dont_parse_ansi: bool,
+
     #[structopt(flatten)]
     lol_options: RainbowOpts,
 }
@@ -39,5 +43,9 @@ fn main() -> Result<(), io::Error> {
     let writer = stdout.lock();
 
     let rainbow = RainbowWriter::with_opts(input, writer, &opt.lol_options);
-    rainbow.rainbow_copy()
+    if opt.dont_parse_ansi {
+        rainbow.rainbow_copy_no_ansi()
+    } else {
+        rainbow.rainbow_copy()
+    }
 }

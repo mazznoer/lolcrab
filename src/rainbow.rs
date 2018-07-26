@@ -8,21 +8,21 @@ use vte;
 
 #[derive(StructOpt)]
 pub struct RainbowOpts {
-    /// Set speed
+    /// Set seed for the rainbow [0-65535, default: random]
     #[structopt(short = "s", long = "seed")]
-    seed: Option<u8>,
-    // How much to grow on the x-Axis
+    seed: Option<u16>,
     #[structopt(
         short = "w",
         long = "frequency-width",
-        default_value = "0.05"
+        default_value = "0.05",
+        help = "How much to grow on the x-Axis"
     )]
     frequency_width: f64,
-    // How much to grow on the y-Axis
     #[structopt(
         short = "h",
         long = "frequency-height",
-        default_value = "0.1"
+        default_value = "0.1",
+        help = "How much to grow on the y-Axis"
     )]
     frequency_height: f64,
 }
@@ -32,7 +32,7 @@ struct RainbowState {
     character: u64,
     frequency_width: f64,
     frequency_height: f64,
-    seed: u8,
+    seed: u16,
     print_color: bool,
 }
 
@@ -66,12 +66,31 @@ impl<W: Write, R: BufRead> RainbowWriter<R, W> {
             let grapheme = g?;
             if grapheme.len() == 1 {
                 self.rainbow_state.print_color = false;
-                self.vte_parser
-                    .advance(&mut self.rainbow_state, *grapheme.as_bytes().get(0).unwrap());
+                self.vte_parser.advance(
+                    &mut self.rainbow_state,
+                    *grapheme.as_bytes().get(0).unwrap(),
+                );
                 if !self.rainbow_state.print_color {
                     self.writer.write_all(grapheme.as_bytes())?;
                     continue;
                 }
+            } else {
+                self.rainbow_state.character += 1;
+            }
+
+            let (r, g, b) = self.rainbow_state.next_color();
+            write!(self.writer, "\x1B[38;2;{};{};{}m{}", r, g, b, grapheme)?;
+        }
+        self.writer.write_all(b"\x1B[0m")
+    }
+
+    pub fn rainbow_copy_no_ansi(mut self) -> Result<(), io::Error> {
+        let graphemes = Graphemes::from(self.reader);
+        for g in graphemes {
+            let grapheme = g?;
+            if grapheme == "\n" {
+                self.rainbow_state.character = 0;
+                self.rainbow_state.line += 1;
             } else {
                 self.rainbow_state.character += 1;
             }
