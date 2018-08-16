@@ -1,15 +1,14 @@
-#![feature(rust_2018_preview, use_extern_macros)]
-
 mod rainbow;
 
 #[cfg(windows)]
 use ansi_term;
 use crate::rainbow::{RainbowOpts, RainbowWriter};
-use std::fs::File;
-use std::io::{self, BufRead, BufReader};
+use std::{
+    fs::File,
+    io::{self, BufRead, BufReader},
+    path::PathBuf,
+};
 use structopt::StructOpt;
-
-use std::path::PathBuf;
 
 #[derive(StructOpt)]
 #[structopt(name = "lolcat", about = "Terminal rainbows.")]
@@ -19,7 +18,11 @@ struct Cmdline {
     input: Option<PathBuf>,
 
     // If ANSI sequences should evaluated
-    #[structopt(short = "A", long = "skip-ansi", help = "Don't evalute ANSI sequences in input")]
+    #[structopt(
+        short = "A",
+        long = "skip-ansi",
+        help = "Don't evalute ANSI sequences in input"
+    )]
     dont_parse_ansi: bool,
 
     #[structopt(flatten)]
