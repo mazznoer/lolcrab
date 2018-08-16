@@ -27,23 +27,23 @@ pub struct RainbowOpts {
     #[structopt(
         short = "c",
         long = "shift-column",
-        default_value = "0.8",
+        default_value = "1.6",
         help = "How much to shift color for every column"
     )]
-    frequency_width: f32,
+    shift_column: f32,
     #[structopt(
         short = "r",
         long = "shift-row",
-        default_value = "1.6",
+        default_value = "2.2",
         help = "How much to shift color for every row"
     )]
-    frequency_height: f32,
+    shift_row: f32,
 }
 
 struct RainbowState {
     character_count: usize,
-    frequency_width: f32,
-    frequency_height: f32,
+    shift_column: f32,
+    shift_row: f32,
     color: Hsl,
 }
 
@@ -64,8 +64,8 @@ impl<R: BufRead, W: Write> RainbowWriter<R, W> {
                     opts.saturation,
                     opts.lightness,
                 ),
-                frequency_width: opts.frequency_width,
-                frequency_height: opts.frequency_height,
+                shift_column: opts.shift_column,
+                shift_row: opts.shift_row,
                 character_count: 0,
             },
         }
@@ -117,7 +117,7 @@ impl RainbowState {
     fn bump_line(&mut self) {
         let char_count = std::mem::replace(&mut self.character_count, 0);
         self.color = self.color.shift_hue(RgbHue::from_degrees(
-            self.frequency_height - char_count as f32 * self.frequency_width,
+            self.shift_row - char_count as f32 * self.shift_column,
         ));
     }
 
@@ -127,7 +127,7 @@ impl RainbowState {
         self.character_count += width;
         self.color = self
             .color
-            .shift_hue(RgbHue::from_degrees(width as f32 * self.frequency_width));
+            .shift_hue(RgbHue::from_degrees(width as f32 * self.shift_column));
     }
 
     #[inline]
