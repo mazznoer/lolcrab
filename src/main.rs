@@ -4,11 +4,15 @@ mod rainbow;
 use ansi_term;
 use crate::rainbow::{RainbowOpts, RainbowWriter};
 use std::{
+    alloc::System,
     fs::File,
     io::{self, BufRead, BufReader},
     path::PathBuf,
 };
 use structopt::StructOpt;
+
+#[global_allocator]
+static GLOBAL: System = System;
 
 #[derive(StructOpt)]
 #[structopt(name = "lolcat", about = "Terminal rainbows.")]
