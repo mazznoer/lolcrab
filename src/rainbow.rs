@@ -1,5 +1,5 @@
 use palette::{encoding::pixel::Pixel, Hsl, Hue, RgbHue, Srgb};
-use rand::random;
+use rand::prelude::*;
 use std::io::{self, prelude::*, Bytes};
 use structopt::StructOpt;
 use unicode_reader::{CodePoints, Graphemes};
@@ -38,6 +38,12 @@ pub struct RainbowOpts {
         help = "How much to shift color for every row"
     )]
     shift_row: f32,
+    #[structopt(
+        short = "S",
+        long = "disable-random-sign",
+        help = "Disable random sign for column and row shift"
+    )]
+    random_sign: bool,
 }
 
 struct RainbowState {
@@ -55,17 +61,28 @@ pub struct RainbowWriter<R: BufRead, W: Write> {
 
 impl<R: BufRead, W: Write> RainbowWriter<R, W> {
     pub fn with_opts(reader: R, writer: W, opts: &RainbowOpts) -> RainbowWriter<R, W> {
+        let mut rng = SmallRng::from_entropy();
+        let sign_col: f32 = if opts.random_sign {
+            rng.gen_range::<i8>(-1, 1) as f32
+        } else {
+            1.0
+        };
+        let sign_row: f32 = if opts.random_sign {
+            rng.gen_range::<i8>(-1, 1) as f32
+        } else {
+            1.0
+        };
         RainbowWriter {
             reader: Graphemes::from(reader),
             writer,
             rainbow_state: RainbowState {
                 color: Hsl::new(
-                    RgbHue::from_degrees(opts.hue.unwrap_or_else(|| random::<u16>() as f32)),
+                    RgbHue::from_degrees(opts.hue.unwrap_or_else(|| rng.gen_range(0.0, 360.0))),
                     opts.saturation,
                     opts.lightness,
                 ),
-                shift_column: opts.shift_column,
-                shift_row: opts.shift_row,
+                shift_column: sign_col * opts.shift_column,
+                shift_row: sign_row * opts.shift_row,
                 character_count: 0,
             },
         }
