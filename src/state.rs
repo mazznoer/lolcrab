@@ -13,12 +13,12 @@ pub struct State {
 impl State {
     pub fn from_opts(opts: &RainbowOpts) -> Self {
         let mut rng = SmallRng::from_entropy();
-        let sign_col = if !opts.random_sign || rng.gen() {
+        let sign_col = if opts.disable_random_sign || rng.gen() {
             1.0
         } else {
             -1.0
         };
-        let sign_row = if !opts.random_sign || rng.gen() {
+        let sign_row = if !opts.disable_random_sign || rng.gen() {
             1.0
         } else {
             -1.0

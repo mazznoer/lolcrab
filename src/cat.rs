@@ -41,7 +41,7 @@ pub struct RainbowOpts {
         long = "disable-random-sign",
         help = "Disable random sign for column and row shift"
     )]
-    pub random_sign: bool,
+    pub disable_random_sign: bool,
 }
 
 fn new_graphme_iterator(reader: impl Read) -> impl Iterator<Item = String> {
