@@ -1,8 +1,10 @@
 # lolcat-rs
+
 lolcat - in rust! Full unicode support and (optional) escapes for ANSI escape sequences.
 
 ## Usage
-```
+
+```text
 Terminal rainbows.
 
 USAGE:

@@ -1,8 +1,9 @@
-mod rainbow;
+mod cat;
+mod state;
 
 #[cfg(windows)]
 use ansi_term;
-use crate::rainbow::{RainbowOpts, RainbowWriter};
+use crate::cat::{rainbow_copy, rainbow_copy_no_ansi, RainbowOpts};
 use std::{
     alloc::System,
     fs::File,
@@ -49,10 +50,9 @@ fn main() -> Result<(), io::Error> {
     let stdout = io::stdout();
     let writer = stdout.lock();
 
-    let rainbow = RainbowWriter::with_opts(input, writer, &opt.lol_options);
     if opt.dont_parse_ansi {
-        rainbow.rainbow_copy_no_ansi()
+        rainbow_copy_no_ansi(input, writer, &opt.lol_options)
     } else {
-        rainbow.rainbow_copy()
+        rainbow_copy(input, writer, &opt.lol_options)
     }
 }
