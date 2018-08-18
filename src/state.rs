@@ -36,11 +36,10 @@ impl State {
     }
 
     pub fn feed(&mut self, string: &str) -> [u8; 3] {
-        if string == "\n" {
-            self.bump_line();
-        } else {
-            self.bump_char(string);
-        }
+        match string {
+            "\n" | "\r\n" => self.bump_line(),
+            _ => self.bump_char(string),
+        };
         self.current_color()
     }
 
