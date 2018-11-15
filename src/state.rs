@@ -24,11 +24,7 @@ impl State {
             -1.0
         };
         State {
-            color: Hsl::new(
-                RgbHue::from_degrees(opts.hue.unwrap_or_else(|| rng.gen_range(0.0, 360.0))),
-                opts.saturation,
-                opts.lightness,
-            ),
+            color: Hsl::new(RgbHue::from_degrees(rng.gen_range(0.0, 360.0)), 1.0, 0.5),
             shift_column: sign_col * opts.shift_column,
             shift_row: sign_row * opts.shift_row,
             character_count: 0,
