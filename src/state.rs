@@ -32,10 +32,11 @@ impl State {
     }
 
     pub fn feed(&mut self, string: &str) -> [u8; 3] {
-        match string {
-            "\n" | "\r\n" => self.bump_line(),
-            _ => self.bump_char(string),
-        };
+        let width = UnicodeWidthStr::width(string);
+        self.character_count += width;
+        self.color = self
+            .color
+            .shift_hue(RgbHue::from_degrees(width as f32 * self.shift_column));
         self.current_color()
     }
 
@@ -46,20 +47,10 @@ impl State {
             .into_raw()
     }
 
-    #[inline]
-    fn bump_line(&mut self) {
+    pub fn bump_line(&mut self) {
         let char_count = std::mem::replace(&mut self.character_count, 0);
         self.color = self.color.shift_hue(RgbHue::from_degrees(
             self.shift_row - char_count as f32 * self.shift_column,
         ));
-    }
-
-    #[inline]
-    fn bump_char(&mut self, string: &str) {
-        let width = UnicodeWidthStr::width(string);
-        self.character_count += width;
-        self.color = self
-            .color
-            .shift_hue(RgbHue::from_degrees(width as f32 * self.shift_column));
     }
 }

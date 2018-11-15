@@ -52,6 +52,7 @@ pub fn rainbow_copy(
         });
         print_color = true;
         writeln!(writer).unwrap();
+        rainbow_state.bump_line();
     });
     writer.write_all(b"\x1B[0m")
 }
@@ -68,6 +69,7 @@ pub fn rainbow_copy_no_ansi(
             write!(writer, "\x1B[38;2;{};{};{}m{}", r, g, b, grapheme).unwrap();
         });
         writeln!(writer).unwrap();
+        rainbow_state.bump_line();
     });
     writer.write_all(b"\x1B[0m")
 }
