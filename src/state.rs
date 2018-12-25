@@ -1,5 +1,5 @@
 use crate::cat::RainbowOpts;
-use palette::{encoding::pixel::Pixel, Hsl, Hue, RgbHue, Srgb};
+use palette::{encoding::pixel::Pixel, white_point::D65, Hue, LabHue, Lch, Srgb};
 use rand::prelude::*;
 use unicode_width::UnicodeWidthStr;
 
@@ -7,7 +7,7 @@ pub struct State {
     character_count: usize,
     shift_column: f32,
     shift_row: f32,
-    color: Hsl,
+    color: Lch<D65, f32>,
 }
 
 impl State {
@@ -24,7 +24,7 @@ impl State {
             -1.0
         };
         State {
-            color: Hsl::new(RgbHue::from_degrees(rng.gen_range(0.0, 360.0)), 1.0, 0.5),
+            color: Lch::new(50.0, 128.0, LabHue::from_degrees(rng.gen_range(0.0, 360.0))),
             shift_column: sign_col * opts.shift_column,
             shift_row: sign_row * opts.shift_row,
             character_count: 0,
@@ -36,7 +36,7 @@ impl State {
         self.character_count += width;
         self.color = self
             .color
-            .shift_hue(RgbHue::from_degrees(width as f32 * self.shift_column));
+            .shift_hue(LabHue::from_degrees(width as f32 * self.shift_column));
         self.current_color()
     }
 
@@ -49,7 +49,7 @@ impl State {
 
     pub fn bump_line(&mut self) {
         let char_count = std::mem::replace(&mut self.character_count, 0);
-        self.color = self.color.shift_hue(RgbHue::from_degrees(
+        self.color = self.color.shift_hue(LabHue::from_degrees(
             self.shift_row - char_count as f32 * self.shift_column,
         ));
     }

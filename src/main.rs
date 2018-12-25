@@ -1,9 +1,9 @@
 mod cat;
 mod state;
 
+use crate::cat::{rainbow_copy, rainbow_copy_no_ansi, RainbowOpts};
 #[cfg(windows)]
 use ansi_term;
-use crate::cat::{rainbow_copy, rainbow_copy_no_ansi, RainbowOpts};
 use std::{
     alloc::System,
     fs::File,
