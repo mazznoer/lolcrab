@@ -5,15 +5,11 @@ use crate::cat::{rainbow_copy, rainbow_copy_no_ansi, RainbowOpts};
 #[cfg(windows)]
 use ansi_term;
 use std::{
-    alloc::System,
     fs::File,
     io::{self, BufRead, BufReader},
     path::PathBuf,
 };
 use structopt::StructOpt;
-
-#[global_allocator]
-static GLOBAL: System = System;
 
 #[derive(StructOpt)]
 #[structopt(name = "lolcat", about = "Terminal rainbows.")]
@@ -40,19 +36,22 @@ fn main() -> Result<(), io::Error> {
     let opt = Cmdline::from_args();
 
     let stdin = io::stdin();
-    let input: Box<BufRead> = if opt.input.is_some() && Some("-".into()) != opt.input {
-        let f = File::open(opt.input.unwrap())?;
-        Box::new(BufReader::new(f))
-    } else {
-        Box::new(stdin.lock())
-    };
-
     let stdout = io::stdout();
     let writer = stdout.lock();
-
-    if opt.dont_parse_ansi {
-        rainbow_copy_no_ansi(input, writer, &opt.lol_options)
+    if opt.input.is_some() && Some("-".into()) != opt.input {
+        let f = File::open(opt.input.unwrap())?;
+        let input = BufReader::new(f);
+        if opt.dont_parse_ansi {
+            rainbow_copy_no_ansi(input, writer, &opt.lol_options)
+        } else {
+            rainbow_copy(input, writer, &opt.lol_options)
+        }
     } else {
-        rainbow_copy(input, writer, &opt.lol_options)
+        let input = stdin.lock();
+        if opt.dont_parse_ansi {
+            rainbow_copy_no_ansi(input, writer, &opt.lol_options)
+        } else {
+            rainbow_copy(input, writer, &opt.lol_options)
+        }
     }
 }
