@@ -1,7 +1,31 @@
-use crate::cat::RainbowOpts;
 use palette::{encoding::pixel::Pixel, white_point::D65, Hue, LabHue, Lch, Srgb};
 use rand::prelude::*;
+use structopt::StructOpt;
 use unicode_width::UnicodeWidthStr;
+
+#[derive(StructOpt)]
+pub struct RainbowOpts {
+    #[structopt(
+        short = "c",
+        long = "shift-column",
+        default_value = "1.6",
+        help = "How much to shift color for every column"
+    )]
+    pub shift_column: f32,
+    #[structopt(
+        short = "r",
+        long = "shift-row",
+        default_value = "2.2",
+        help = "How much to shift color for every row"
+    )]
+    pub shift_row: f32,
+    #[structopt(
+        short = "S",
+        long = "disable-random-sign",
+        help = "Disable random sign for column and row shift"
+    )]
+    pub disable_random_sign: bool,
+}
 
 pub struct State {
     character_count: usize,
