@@ -1,6 +1,6 @@
 [package]
 name = "lolcat"
-version = "1.3.1"
+version = "1.4.0"
 authors = ["David Knaack <davidkna@users.noreply.github.com>"]
 edition = "2018"
 
