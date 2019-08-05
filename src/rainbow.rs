@@ -56,28 +56,27 @@ impl Rainbow {
         self.keep_ansi = keep_ansi;
     }
 
-    pub fn rainbowify(&mut self, text: &str) -> String {
-        let mut print_color = true;
+    pub fn colorize(&mut self, text: &str) -> String {
+        let mut escaping = false;
         let mut out = String::new();
-        for line in text.lines() {
-            UnicodeSegmentation::graphemes(&line[..], true).for_each(|grapheme| {
-                if grapheme == "\x1B" {
-                    print_color = false;
-                }
+        UnicodeSegmentation::graphemes(text, true).for_each(|grapheme| {
+            if !self.keep_ansi && grapheme == "\x1B" {
+                escaping = true;
+                return;
+            } else if grapheme == "\n" {
+                self.bump_line();
+                return;
+            }
 
-                if self.keep_ansi || print_color {
-                    let [r, g, b] = self.bump_char(&grapheme);
-                    write!(out, "\x1B[38;2;{};{};{}m{}", r, g, b, grapheme).unwrap();
-                } else {
-                    if "a" <= grapheme && "z" >= grapheme || "A" <= grapheme && "Z" >= grapheme {
-                        print_color = true;
-                    }
-                    write!(out, "{}", grapheme).unwrap();
-                }
-            });
-            writeln!(out).unwrap();
-            self.bump_line();
-        }
+            if self.keep_ansi || !escaping {
+                let [r, g, b] = self.bump_char(&grapheme);
+                write!(out, "\x1B[38;2;{};{};{}m{}", r, g, b, grapheme).unwrap();
+            } else if "a" <= grapheme && "z" >= grapheme || "A" <= grapheme && "Z" >= grapheme {
+                escaping = false;
+            }
+        });
+        writeln!(out).unwrap();
+        self.bump_line();
         write!(out, "\x1B[0m").unwrap();
 
         out

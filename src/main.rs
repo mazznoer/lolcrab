@@ -49,7 +49,7 @@ fn main() -> Result<(), io::Error> {
         };
 
         for line in file.lines().filter_map(|i| i.ok()) {
-            let line = rainbow.rainbowify(&line);
+            let line = rainbow.colorize(&line);
             print!("{}", line)
         }
     }
