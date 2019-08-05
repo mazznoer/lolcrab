@@ -63,8 +63,10 @@ impl Rainbow {
             if !self.keep_ansi && grapheme == "\x1B" {
                 escaping = true;
                 return;
-            } else if grapheme == "\n" {
+            }
+            if grapheme == "\n" {
                 self.bump_line();
+                writeln!(out).unwrap();
                 return;
             }
 
