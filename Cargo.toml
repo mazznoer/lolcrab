@@ -11,7 +11,7 @@ default = ["build-binary"]
 [dependencies]
 palette = "0.4.1"
 rand = { version = "0.7.0", features = ["std", "small_rng"] }
-structopt = { version = "0.2.18", optional = true }
+structopt = { version = "0.3", optional = true }
 unicode-segmentation = "1.3.0"
 unicode-width = "0.1.5"
 
