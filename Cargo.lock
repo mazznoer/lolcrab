@@ -190,6 +190,7 @@ dependencies = [
  "rand",
  "scarlet",
  "structopt",
+ "unicode-segmentation",
  "unicode-width",
 ]
 

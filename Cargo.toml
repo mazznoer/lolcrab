@@ -13,4 +13,5 @@ rand = { version = "0.7", features = ["std", "small_rng"] }
 scarlet = "1.1"
 structopt = { version = "0.3", optional = true }
 unicode-width = "0.1"
+unicode-segmentation = "1.3"
 
