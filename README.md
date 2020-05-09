@@ -1,6 +1,6 @@
-# lolcat-rs
+# lcat
 
-lolcat - in rust! Full unicode support and (optional) escapes for ANSI escape sequences.
+Another lolcat in rust! Full unicode support, escapes for ANSI escape sequences, hue shift in CIE L*C*h.
 
 ## Usage
 
@@ -8,21 +8,20 @@ lolcat - in rust! Full unicode support and (optional) escapes for ANSI escape se
 Terminal rainbows.
 
 USAGE:
-    lolcat [FLAGS] [OPTIONS] [input]
+    lcat [FLAGS] [OPTIONS] [File]...
 
 FLAGS:
-    -A, --skip-ansi              Don't evalute ANSI sequences in input
-    -h, --help                   Prints help information
-    -S, --disable-random-sign    Disable random sign for column and row shift
-    -V, --version                Prints version information
+        --help                    Prints help information
+    -n, --shift-sign-no-random    Randomize sign of col and row shift value
+    -V, --version                 Prints version information
 
 OPTIONS:
-    -H, --hue <hue>                      Set inital hue (in degrees) [default: random]
-    -l, --lighness <lightness>           Lighness of colors in rainbow [default: 0.5]
-    -s, --saturation <saturation>        Saturation of colors in rainbow [default: 1.0]
-    -c, --shift-column <shift_column>    How much to shift color for every column [default: 1.6]
-    -r, --shift-row <shift_row>          How much to shift color for every row [default: 2.2]
+    -c, --chroma <chroma>          Sets initial chroma as defined by CIE L*C*h Color Scale [default: 128]
+    -h, --hue <hue>                Sets initial hue as defined by CIE L*C*h Color Scale [default: random]
+    -l, --luminance <luminance>    Sets initial luminance as defined by CIE L*C*h Color Scale [default: 50]
+    -C, --shift-col <shift-col>    How much the hue of the color gets shifted every column [default: 1.6]
+    -R, --shift-row <shift-row>    How much the hue of the color gets shifted every row [default: 3.2]
 
 ARGS:
-    <input>    Input file
+    <File>...     [default: -]
 ```

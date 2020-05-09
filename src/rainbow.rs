@@ -1,86 +1,75 @@
-use palette::{encoding::pixel::Pixel, white_point::D65, Hue, LabHue, Lch, Srgb};
-use rand::prelude::*;
-use std::fmt::Write;
-use unicode_segmentation::UnicodeSegmentation;
+use bstr::ByteSlice;
+use scarlet::{colors::cielchcolor::CIELCHColor, prelude::*};
+use std::io::Write;
 use unicode_width::UnicodeWidthStr;
-
 pub struct Rainbow {
-    character_count: usize,
-    shift_column: f32,
-    shift_row: f32,
-    color: Lch<D65, f32>,
-    keep_ansi: bool,
-}
+    current_row: i32,
+    current_col: i32,
+    shift_col: f64,
+    shift_row: f64,
 
-impl Default for Rainbow {
-    fn default() -> Self {
-        let mut rng = SmallRng::from_entropy();
-        let shift_column = if rng.gen() { 1.6 } else { -1.6 };
-        let shift_row = if rng.gen() { 2.2 } else { -2.2 };
-        let color = Lch::new(50.0, 128.0, LabHue::from_degrees(rng.gen_range(0.0, 360.0)));
-        Self {
-            color,
-            shift_column,
-            shift_row,
-            keep_ansi: false,
-            character_count: 0,
-        }
-    }
+    pub color: CIELCHColor,
 }
 
 impl Rainbow {
-    #[inline]
-    fn current_color(&mut self) -> [u8; 3] {
-        Srgb::from_linear(self.color.into())
-            .into_format()
-            .into_raw()
+    pub fn new(start_color: &impl Color, shift_col: f64, shift_row: f64) -> Self {
+        let color: CIELCHColor = start_color.convert();
+
+        Self {
+            color,
+            shift_col,
+            shift_row,
+            current_col: 0,
+            current_row: 0,
+        }
     }
 
-    fn bump_char(&mut self, string: &str) -> [u8; 3] {
-        let width = UnicodeWidthStr::width(string);
-        self.character_count += width;
-        self.color = self
-            .color
-            .shift_hue(LabHue::from_degrees(width as f32 * self.shift_column));
-        self.current_color()
+    pub fn step_row(&mut self, n_row: i32) {
+        self.current_row += n_row;
+        self.color
+            .set_hue(self.color.hue() + (n_row as f64) * self.shift_row);
     }
 
-    fn bump_line(&mut self) {
-        let char_count = std::mem::replace(&mut self.character_count, 0);
-        self.color = self.color.shift_hue(LabHue::from_degrees(
-            self.shift_row - char_count as f32 * self.shift_column,
-        ));
+    pub fn step_col(&mut self, n_col: i32) {
+        self.current_col += n_col;
+        self.color
+            .set_hue(self.color.hue() + (n_col as f64) * self.shift_col);
     }
 
-    pub fn set_keep_ansi(&mut self, keep_ansi: bool) {
-        self.keep_ansi = keep_ansi;
+    #[allow(dead_code)]
+    pub fn reset_row(&mut self) {
+        self.step_row(-self.current_row)
     }
 
-    pub fn colorize(&mut self, text: &str) -> String {
+    pub fn reset_col(&mut self) {
+        self.step_col(-self.current_col)
+    }
+
+    pub fn colorize(&mut self, text: &[u8], out: &mut dyn Write) -> std::io::Result<()> {
         let mut escaping = false;
-        let mut out = String::new();
-        UnicodeSegmentation::graphemes(text, true).for_each(|grapheme| {
-            if !self.keep_ansi && grapheme == "\x1B" {
+        for grapheme in text.graphemes() {
+            if grapheme == "\x1B" {
                 escaping = true;
-                return;
+                continue;
             }
             if grapheme == "\n" {
-                self.bump_line();
+                self.reset_col();
+                self.step_row(1);
                 writeln!(out).unwrap();
-                return;
+                continue;
             }
 
-            if self.keep_ansi || !escaping {
-                let [r, g, b] = self.bump_char(&grapheme);
-                write!(out, "\x1B[38;2;{};{};{}m{}", r, g, b, grapheme).unwrap();
+            if !escaping {
+                self.step_col(UnicodeWidthStr::width(grapheme) as i32);
+                let (r, g, b) = RGBColor::clamp(self.color)
+                    .convert::<RGBColor>()
+                    .int_rgb_tup();
+                write!(out, "\x1B[38;2;{};{};{}m{}", r, g, b, grapheme)?;
             } else if "a" <= grapheme && "z" >= grapheme || "A" <= grapheme && "Z" >= grapheme {
                 escaping = false;
             }
-        });
-        writeln!(out).unwrap();
-        self.bump_line();
-        write!(out, "\x1B[0m").unwrap();
+        }
 
-        out
+        out.write_all(b"\x1B[0m")
     }
 }

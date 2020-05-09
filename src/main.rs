@@ -1,8 +1,9 @@
 mod rainbow;
+mod rainbow_cmd;
 
-#[cfg(windows)]
-use ansi_term;
+use bstr::io::BufReadExt;
 use rainbow::Rainbow;
+use rainbow_cmd::RainbowCmd;
 use std::{
     fs::File,
     io::{self, BufRead, BufReader},
@@ -11,33 +12,21 @@ use std::{
 use structopt::StructOpt;
 
 #[derive(StructOpt)]
-#[structopt(name = "lolcat", about = "Terminal rainbows.")]
+#[structopt(name = "lcat", about = "Terminal rainbows.")]
 pub struct Cmdline {
-    // If ANSI sequences should evaluated
-    #[structopt(
-        short = "A",
-        long = "keep-ansi",
-        help = "Don't filter ANSI sequences in input"
-    )]
-    keep_ansi: bool,
     #[structopt(name = "File", default_value = "-", parse(from_os_str))]
     files: Vec<PathBuf>,
+
+    #[structopt(flatten)]
+    rainbow: RainbowCmd,
 }
 
 fn main() -> Result<(), io::Error> {
-    #[cfg(windows)]
-    ansi_term::enable_ansi_support().unwrap();
     let opt = Cmdline::from_args();
 
-    let files = if opt.files.is_empty() {
-        vec![PathBuf::from("-")]
-    } else {
-        opt.files
-    };
-    let mut rainbow = Rainbow::default();
-    rainbow.set_keep_ansi(opt.keep_ansi);
+    let mut rainbow: Rainbow = opt.rainbow.into();
 
-    for path in files {
+    for path in opt.files {
         let stdin = io::stdin();
         let stdin = stdin.lock();
         let file: Box<dyn BufRead> = if path == PathBuf::from("-") {
@@ -48,10 +37,12 @@ fn main() -> Result<(), io::Error> {
             Box::new(b)
         };
 
-        for line in file.lines().filter_map(|i| i.ok()) {
-            let line = rainbow.colorize(&line);
-            print!("{}", line)
-        }
+        let stdout = io::stdout();
+        let mut stdout = stdout.lock();
+        file.for_byte_line_with_terminator(|ref line| {
+            rainbow.colorize(line, &mut stdout)?;
+            Ok(true)
+        })?;
     }
 
     Ok(())
