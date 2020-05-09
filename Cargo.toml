@@ -3,6 +3,10 @@ name = "lcat"
 version = "0.1.0"
 authors = ["David Knaack <davidkna@users.noreply.github.com>"]
 edition = "2018"
+description = "Another lolcat in rust! Full unicode support, escapes for ANSI escape sequences, hue shift in CIE L*C*h."
+readme = "README.md"
+repository = "https://github.com/davidkna/lcat-rs"
+license = "MIT OR Apache-2.0"
 
 [features]
 default = ["structopt"]
