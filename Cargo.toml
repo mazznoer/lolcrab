@@ -19,3 +19,5 @@ structopt = { version = "0.3", optional = true }
 unicode-width = "0.1"
 unicode-segmentation = "1.3"
 
+# Allocator
+mimalloc = { version = "0.1.19", optional = true, default-features = false }
