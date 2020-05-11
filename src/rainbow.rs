@@ -70,7 +70,7 @@ impl Rainbow {
             }
         }
 
-        out.write_all(b"\x1B[0m")
+        out.write_all(b"\x1B[39m")
     }
 
     pub fn colorize_str(&mut self, text: &str, out: &mut impl Write) -> std::io::Result<()> {
@@ -98,6 +98,6 @@ impl Rainbow {
             }
         }
 
-        out.write_all(b"\x1B[0m")
+        out.write_all(b"\x1B[39m")
     }
 }
