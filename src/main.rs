@@ -1,9 +1,5 @@
-mod rainbow;
-mod rainbow_cmd;
-
 use bstr::io::BufReadExt;
-use rainbow::Rainbow;
-use rainbow_cmd::RainbowCmd;
+use lcat::{Rainbow, RainbowCmd};
 use std::{
     fs::File,
     io::{self, BufRead, BufReader},

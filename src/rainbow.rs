@@ -37,7 +37,6 @@ impl Rainbow {
             .set_hue(self.color.hue() + (n_col as f64) * self.shift_col);
     }
 
-    #[allow(dead_code)]
     pub fn reset_row(&mut self) {
         self.step_row(-self.current_row)
     }
@@ -46,7 +45,7 @@ impl Rainbow {
         self.step_col(-self.current_col)
     }
 
-    pub fn colorize(&mut self, text: &[u8], out: &mut dyn Write) -> std::io::Result<()> {
+    pub fn colorize(&mut self, text: &[u8], out: &mut impl Write) -> std::io::Result<()> {
         let mut escaping = false;
         for grapheme in text.graphemes() {
             if grapheme == "\x1B" {
@@ -74,8 +73,7 @@ impl Rainbow {
         out.write_all(b"\x1B[0m")
     }
 
-    #[allow(dead_code)]
-    pub fn colorize_str(&mut self, text: &str, out: &mut dyn Write) -> std::io::Result<()> {
+    pub fn colorize_str(&mut self, text: &str, out: &mut impl Write) -> std::io::Result<()> {
         let mut escaping = false;
         for grapheme in UnicodeSegmentation::graphemes(text, true) {
             if grapheme == "\x1B" {
