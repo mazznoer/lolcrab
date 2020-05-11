@@ -70,7 +70,8 @@ impl Rainbow {
             }
         }
 
-        out.write_all(b"\x1B[39m")
+        out.write_all(b"\x1B[39m")?;
+        out.flush()
     }
 
     pub fn colorize_str(&mut self, text: &str, out: &mut impl Write) -> std::io::Result<()> {
@@ -98,6 +99,86 @@ impl Rainbow {
             }
         }
 
-        out.write_all(b"\x1B[39m")
+        out.write_all(b"\x1B[39m")?;
+        out.flush()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn create_rb() -> Rainbow {
+        Rainbow::new(&RGBColor::from_hex_code("#f00000").unwrap(), 1., 2.)
+    }
+
+    #[test]
+    fn test_eq_str_u8() {
+        let test = "foobar";
+
+        let mut rb_a = create_rb();
+        let mut out_a = Vec::new();
+        rb_a.colorize(&test.as_bytes(), &mut out_a).unwrap();
+
+        let mut rb_b = create_rb();
+        let mut out_b = Vec::new();
+        rb_b.colorize_str(&test, &mut out_b).unwrap();
+
+        assert_eq!(out_a, out_b);
+
+    }
+
+    #[test]
+    fn test_char_width() {
+        let test = "f";
+        let mut rb_a = create_rb();
+        rb_a.colorize_str(&test, &mut Vec::new()).unwrap();
+
+        assert_eq!(rb_a.current_col, 1);
+
+        let test = "😃";
+        let mut rb_b = create_rb();
+        rb_b.colorize_str(&test, &mut Vec::new()).unwrap();
+        assert_eq!(rb_b.current_col, 2);
+
+    }
+
+    #[test]
+    fn test_step_row()  {
+        let test_string = "foobar\n";
+
+        let mut rb_a = create_rb();
+        rb_a.colorize(&test_string.as_bytes(), &mut Vec::new()).unwrap();
+        let mut rb_b = create_rb();
+        rb_b.step_row(1);
+        assert_eq!(
+            rb_a.color.convert::<RGBColor>().int_rgb_tup(),
+            rb_b.color.convert::<RGBColor>().int_rgb_tup()
+        );
+    }
+
+    #[test]
+    fn test_reset_row() {
+        let mut rb_a = create_rb();
+        let rb_b = create_rb();
+        rb_a.step_row(20);
+        rb_a.reset_row();
+        assert_eq!(
+            rb_a.color.convert::<RGBColor>().int_rgb_tup(),
+            rb_b.color.convert::<RGBColor>().int_rgb_tup()
+        );
+
+    }
+
+    #[test]
+    fn test_reset_col() {
+        let mut rb_a = create_rb();
+        let rb_b = create_rb();
+        rb_a.step_col(20);
+        rb_a.reset_col();
+        assert_eq!(
+            rb_a.color.convert::<RGBColor>().int_rgb_tup(),
+            rb_b.color.convert::<RGBColor>().int_rgb_tup()
+        );
     }
 }
