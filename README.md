@@ -1,6 +1,6 @@
 # lcat
 
-Another lolcat in rust! Full unicode support, escapes for ANSI escape sequences, hue shift in CIE L*C*h.
+Another lolcat in rust! Full unicode support, escapes for ANSI escape sequences, hue shift in CIE L\*C*h.
 
 ## Usage
 
