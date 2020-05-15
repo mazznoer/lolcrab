@@ -45,29 +45,35 @@ impl Rainbow {
         self.step_col(-self.current_col)
     }
 
+    #[inline]
+    fn handle_grapheme(&mut self, out: &mut impl Write, grapheme: &str, escaping: bool) -> std::io::Result<bool> {
+        let mut escaping = escaping;
+        if grapheme == "\x1B" {
+            return Ok(true)
+        }
+        if grapheme == "\n" {
+            self.reset_col();
+            self.step_row(1);
+            writeln!(out).unwrap();
+            return Ok(false)
+        }
+
+        if !escaping {
+            let (r, g, b) = RGBColor::clamp(self.color)
+                .convert::<RGBColor>()
+                .int_rgb_tup();
+            write!(out, "\x1B[38;2;{};{};{}m{}", r, g, b, grapheme)?;
+            self.step_col(UnicodeWidthStr::width(grapheme) as i32);
+        } else if "a" <= grapheme && "z" >= grapheme || "A" <= grapheme && "Z" >= grapheme {
+            escaping = false;
+        }
+        Ok(escaping)
+    }
+
     pub fn colorize(&mut self, text: &[u8], out: &mut impl Write) -> std::io::Result<()> {
         let mut escaping = false;
         for grapheme in text.graphemes() {
-            if grapheme == "\x1B" {
-                escaping = true;
-                continue;
-            }
-            if grapheme == "\n" {
-                self.reset_col();
-                self.step_row(1);
-                writeln!(out).unwrap();
-                continue;
-            }
-
-            if !escaping {
-                self.step_col(UnicodeWidthStr::width(grapheme) as i32);
-                let (r, g, b) = RGBColor::clamp(self.color)
-                    .convert::<RGBColor>()
-                    .int_rgb_tup();
-                write!(out, "\x1B[38;2;{};{};{}m{}", r, g, b, grapheme)?;
-            } else if "a" <= grapheme && "z" >= grapheme || "A" <= grapheme && "Z" >= grapheme {
-                escaping = false;
-            }
+            escaping = self.handle_grapheme(out, grapheme, escaping)?;
         }
 
         out.write_all(b"\x1B[39m")?;
@@ -77,26 +83,7 @@ impl Rainbow {
     pub fn colorize_str(&mut self, text: &str, out: &mut impl Write) -> std::io::Result<()> {
         let mut escaping = false;
         for grapheme in UnicodeSegmentation::graphemes(text, true) {
-            if grapheme == "\x1B" {
-                escaping = true;
-                continue;
-            }
-            if grapheme == "\n" {
-                self.reset_col();
-                self.step_row(1);
-                writeln!(out).unwrap();
-                continue;
-            }
-
-            if !escaping {
-                self.step_col(UnicodeWidthStr::width(grapheme) as i32);
-                let (r, g, b) = RGBColor::clamp(self.color)
-                    .convert::<RGBColor>()
-                    .int_rgb_tup();
-                write!(out, "\x1B[38;2;{};{};{}m{}", r, g, b, grapheme)?;
-            } else if "a" <= grapheme && "z" >= grapheme || "A" <= grapheme && "Z" >= grapheme {
-                escaping = false;
-            }
+            escaping = self.handle_grapheme(out, grapheme, escaping)?;
         }
 
         out.write_all(b"\x1B[39m")?;
