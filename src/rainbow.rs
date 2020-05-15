@@ -103,12 +103,32 @@ impl Rainbow {
     }
 }
 
+pub struct RainbowWriter<W: Write> {
+    rainbow: Rainbow,
+    out: W,
+}
+
+impl<W: Write> Write for RainbowWriter<W> {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        self.rainbow.colorize(buf, &mut self.out)?;
+        Ok(buf.len())
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        self.out.flush()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     fn create_rb() -> Rainbow {
-        Rainbow::new(&RGBColor::from_hex_code("#f00000").unwrap(), 1., 2.)
+        Rainbow::new(
+            RGBColor::from_hex_code("#f00000").unwrap().convert(),
+            1.,
+            2.,
+        )
     }
 
     #[test]
