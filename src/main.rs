@@ -1,8 +1,7 @@
-use bstr::io::BufReadExt;
 use lcat::{Rainbow, RainbowCmd};
 use std::{
     fs::File,
-    io::{self, BufRead, BufReader},
+    io::{self, BufReader},
     path::PathBuf,
 };
 use structopt::StructOpt;
@@ -27,22 +26,17 @@ fn main() -> Result<(), io::Error> {
     let mut rainbow: Rainbow = opt.rainbow.into();
 
     for path in opt.files {
-        let stdin = io::stdin();
-        let stdin = stdin.lock();
-        let file: Box<dyn BufRead> = if path == PathBuf::from("-") {
-            Box::new(stdin)
-        } else {
-            let f = File::open(path).unwrap();
-            let b = BufReader::new(f);
-            Box::new(b)
-        };
-
         let stdout = io::stdout();
         let mut stdout = stdout.lock();
-        file.for_byte_line_with_terminator(|ref line| {
-            rainbow.colorize(line, &mut stdout)?;
-            Ok(true)
-        })?;
+        if path == PathBuf::from("-") {
+            let stdin = io::stdin();
+            let mut stdin = stdin.lock();
+            rainbow.colorize_read(&mut stdin, &mut stdout)?;
+        } else {
+            let f = File::open(path).unwrap();
+            let mut b = BufReader::new(f);
+            rainbow.colorize_read(&mut b, &mut stdout)?;
+        }
     }
 
     Ok(())

@@ -1,6 +1,6 @@
-use bstr::ByteSlice;
+use bstr::{io::BufReadExt, ByteSlice};
 use scarlet::{color::XYZColor, prelude::*};
-use std::io::Write;
+use std::io::{prelude::*, Write};
 use unicode_segmentation::UnicodeSegmentation;
 use unicode_width::UnicodeWidthStr;
 pub struct Rainbow {
@@ -89,6 +89,17 @@ impl Rainbow {
 
         out.write_all(b"\x1B[39m")?;
         out.flush()
+    }
+
+    pub fn colorize_read(
+        &mut self,
+        input: &mut impl BufRead,
+        out: &mut impl Write,
+    ) -> std::io::Result<()> {
+        input.for_byte_line_with_terminator(|ref line| {
+            self.colorize(line, out)?;
+            Ok(true)
+        })
     }
 }
 
