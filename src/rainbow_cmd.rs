@@ -1,6 +1,6 @@
 use crate::Rainbow;
 use rand::prelude::*;
-use scarlet::colors::cielchcolor::CIELCHColor;
+use scarlet::{colors::CIELCHColor, prelude::*};
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
@@ -53,6 +53,6 @@ impl Into<Rainbow> for RainbowCmd {
             -self.shift_col
         };
 
-        Rainbow::new(&color, shift_col, shift_row)
+        Rainbow::new(color.convert(), shift_col, shift_row)
     }
 }

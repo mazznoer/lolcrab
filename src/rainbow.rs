@@ -1,5 +1,5 @@
 use bstr::ByteSlice;
-use scarlet::{colors::cielchcolor::CIELCHColor, prelude::*};
+use scarlet::{color::XYZColor, prelude::*};
 use std::io::Write;
 use unicode_segmentation::UnicodeSegmentation;
 use unicode_width::UnicodeWidthStr;
@@ -9,13 +9,11 @@ pub struct Rainbow {
     shift_col: f64,
     shift_row: f64,
 
-    pub color: CIELCHColor,
+    pub color: XYZColor,
 }
 
 impl Rainbow {
-    pub fn new(start_color: &impl Color, shift_col: f64, shift_row: f64) -> Self {
-        let color: CIELCHColor = start_color.convert();
-
+    pub fn new(color: XYZColor, shift_col: f64, shift_row: f64) -> Self {
         Self {
             color,
             shift_col,
@@ -46,22 +44,25 @@ impl Rainbow {
     }
 
     #[inline]
-    fn handle_grapheme(&mut self, out: &mut impl Write, grapheme: &str, escaping: bool) -> std::io::Result<bool> {
+    fn handle_grapheme(
+        &mut self,
+        out: &mut impl Write,
+        grapheme: &str,
+        escaping: bool,
+    ) -> std::io::Result<bool> {
         let mut escaping = escaping;
         if grapheme == "\x1B" {
-            return Ok(true)
+            return Ok(true);
         }
         if grapheme == "\n" {
             self.reset_col();
             self.step_row(1);
             writeln!(out).unwrap();
-            return Ok(false)
+            return Ok(false);
         }
 
         if !escaping {
-            let (r, g, b) = RGBColor::clamp(self.color)
-                .convert::<RGBColor>()
-                .int_rgb_tup();
+            let (r, g, b) = self.color.convert::<RGBColor>().int_rgb_tup();
             write!(out, "\x1B[38;2;{};{};{}m{}", r, g, b, grapheme)?;
             self.step_col(UnicodeWidthStr::width(grapheme) as i32);
         } else if "a" <= grapheme && "z" >= grapheme || "A" <= grapheme && "Z" >= grapheme {
@@ -112,7 +113,6 @@ mod tests {
         rb_b.colorize_str(&test, &mut out_b).unwrap();
 
         assert_eq!(out_a, out_b);
-
     }
 
     #[test]
@@ -127,15 +127,15 @@ mod tests {
         let mut rb_b = create_rb();
         rb_b.colorize_str(&test, &mut Vec::new()).unwrap();
         assert_eq!(rb_b.current_col, 2);
-
     }
 
     #[test]
-    fn test_step_row()  {
+    fn test_step_row() {
         let test_string = "foobar\n";
 
         let mut rb_a = create_rb();
-        rb_a.colorize(&test_string.as_bytes(), &mut Vec::new()).unwrap();
+        rb_a.colorize(&test_string.as_bytes(), &mut Vec::new())
+            .unwrap();
         let mut rb_b = create_rb();
         rb_b.step_row(1);
         assert_eq!(
@@ -154,7 +154,6 @@ mod tests {
             rb_a.color.convert::<RGBColor>().int_rgb_tup(),
             rb_b.color.convert::<RGBColor>().int_rgb_tup()
         );
-
     }
 
     #[test]
