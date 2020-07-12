@@ -52,6 +52,7 @@ impl Rainbow {
     ) -> std::io::Result<bool> {
         let mut escaping = escaping;
         if grapheme == "\x1B" {
+            write!(out, "{}", grapheme)?;
             return Ok(true);
         }
         if grapheme == "\n" {
@@ -65,8 +66,9 @@ impl Rainbow {
             let (r, g, b) = self.color.convert::<RGBColor>().int_rgb_tup();
             write!(out, "\x1B[38;2;{};{};{}m{}", r, g, b, grapheme)?;
             self.step_col(UnicodeWidthStr::width(grapheme) as i32);
-        } else if "a" <= grapheme && "z" >= grapheme || "A" <= grapheme && "Z" >= grapheme {
-            escaping = false;
+        } else {
+            write!(out, "{}", grapheme)?;
+            escaping = !("a" <= grapheme && "z" >= grapheme || "A" <= grapheme && "Z" >= grapheme);
         }
         Ok(escaping)
     }
