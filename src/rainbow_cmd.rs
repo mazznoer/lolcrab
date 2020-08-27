@@ -53,6 +53,10 @@ impl Into<Rainbow> for RainbowCmd {
             -self.shift_col
         };
 
-        Rainbow::new(color.convert(), shift_col, shift_row)
+        Rainbow::new(
+            color.convert(),
+            (shift_col * (u32::MAX as f64 / 360.)) as i32,
+            (shift_row * (u32::MAX as f64 / 360.)) as i32,
+        )
     }
 }

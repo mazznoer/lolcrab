@@ -1,46 +1,82 @@
 use bstr::{io::BufReadExt, ByteSlice};
 use scarlet::{color::XYZColor, prelude::*};
-use std::io::{prelude::*, Write};
+use std::{
+    collections::HashMap,
+    io::{prelude::*, Write},
+};
 use unicode_segmentation::UnicodeSegmentation;
-use unicode_width::UnicodeWidthStr;
-pub struct Rainbow {
-    current_row: i32,
-    current_col: i32,
-    shift_col: f64,
-    shift_row: f64,
+use unicode_width::UnicodeWidthChar;
 
-    pub color: XYZColor,
+pub struct Rainbow {
+    current_row: usize,
+    current_col: usize,
+    shift_col: i32,
+    shift_row: i32,
+    base_hue: u32,
+    cache: HashMap<u32, (u8, u8, u8)>,
+    color: XYZColor,
 }
 
 impl Rainbow {
-    pub fn new(color: XYZColor, shift_col: f64, shift_row: f64) -> Self {
+    pub fn new(color: XYZColor, shift_col: i32, shift_row: i32) -> Self {
         Self {
             color,
             shift_col,
             shift_row,
             current_col: 0,
             current_row: 0,
+            cache: HashMap::new(),
+            base_hue: (color.hue() * (u32::MAX as f64 / 360.)) as u32,
         }
     }
 
-    pub fn step_row(&mut self, n_row: i32) {
+    pub fn step_row(&mut self, n_row: usize) {
         self.current_row += n_row;
-        self.color
-            .set_hue(self.color.hue() + (n_row as f64) * self.shift_row);
     }
 
-    pub fn step_col(&mut self, n_col: i32) {
+    pub fn step_col(&mut self, n_col: usize) {
         self.current_col += n_col;
-        self.color
-            .set_hue(self.color.hue() + (n_col as f64) * self.shift_col);
     }
 
     pub fn reset_row(&mut self) {
-        self.step_row(-self.current_row)
+        self.current_row = 0;
     }
 
     pub fn reset_col(&mut self) {
-        self.step_col(-self.current_col)
+        self.current_col = 0;
+    }
+
+    pub fn get_color(&mut self) -> (u8, u8, u8) {
+        let mut hue = self.base_hue;
+
+        if self.shift_row >= 0 {
+            let (new_hue, _) = hue.overflowing_add(self.current_row as u32 * self.shift_row as u32);
+            hue = new_hue;
+        } else {
+            let (new_hue, _) =
+                hue.overflowing_sub(self.current_row as u32 * (-self.shift_row) as u32);
+            hue = new_hue;
+        }
+
+        if self.shift_col >= 0 {
+            let (new_hue, _) = hue.overflowing_add(self.current_col as u32 * self.shift_col as u32);
+            hue = new_hue;
+        } else {
+            let (new_hue, _) =
+                hue.overflowing_sub(self.current_col as u32 * (-self.shift_col) as u32);
+            hue = new_hue;
+        }
+
+        if let Some(out) = self.cache.get(&hue) {
+            return *out;
+        }
+
+        self.color.set_hue((hue as f64) / (u32::MAX as f64));
+        let out = self.color.convert::<RGBColor>().int_rgb_tup();
+
+        self.cache.insert(hue, out);
+
+        out
     }
 
     #[inline]
@@ -52,23 +88,27 @@ impl Rainbow {
     ) -> std::io::Result<bool> {
         let mut escaping = escaping;
         if grapheme == "\x1B" {
-            write!(out, "{}", grapheme)?;
+            out.write_all(b"\x1B")?;
             return Ok(true);
         }
         if grapheme == "\n" {
             self.reset_col();
             self.step_row(1);
-            writeln!(out).unwrap();
+            out.write_all(b"\n")?;
             return Ok(false);
         }
 
         if !escaping {
-            let (r, g, b) = self.color.convert::<RGBColor>().int_rgb_tup();
+            let (r, g, b) = self.get_color();
             write!(out, "\x1B[38;2;{};{};{}m{}", r, g, b, grapheme)?;
-            self.step_col(UnicodeWidthStr::width(grapheme) as i32);
+            self.step_col(grapheme.chars().next().and_then(|c| c.width()).unwrap_or(0));
         } else {
-            write!(out, "{}", grapheme)?;
-            escaping = !("a" <= grapheme && "z" >= grapheme || "A" <= grapheme && "Z" >= grapheme);
+            // write!(out, "{}", grapheme)?;
+            out.write_all(grapheme.as_bytes())?;
+            escaping = grapheme.len() != 1 || {
+                let c = grapheme.as_bytes()[0];
+                !(b'a'..=b'z').contains(&c) && !(b'A'..=b'Z').contains(&c)
+            };
         }
         Ok(escaping)
     }
@@ -105,22 +145,6 @@ impl Rainbow {
     }
 }
 
-pub struct RainbowWriter<W: Write> {
-    rainbow: Rainbow,
-    out: W,
-}
-
-impl<W: Write> Write for RainbowWriter<W> {
-    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-        self.rainbow.colorize(buf, &mut self.out)?;
-        Ok(buf.len())
-    }
-
-    fn flush(&mut self) -> std::io::Result<()> {
-        self.out.flush()
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -128,8 +152,8 @@ mod tests {
     fn create_rb() -> Rainbow {
         Rainbow::new(
             RGBColor::from_hex_code("#f00000").unwrap().convert(),
-            1.,
-            2.,
+            (1. * (u32::MAX as f64 / 360.)) as i32,
+            (2. * (u32::MAX as f64 / 360.)) as i32,
         )
     }
 
@@ -171,33 +195,24 @@ mod tests {
             .unwrap();
         let mut rb_b = create_rb();
         rb_b.step_row(1);
-        assert_eq!(
-            rb_a.color.convert::<RGBColor>().int_rgb_tup(),
-            rb_b.color.convert::<RGBColor>().int_rgb_tup()
-        );
+        assert_eq!(rb_a.get_color(), rb_b.get_color(),);
     }
 
     #[test]
     fn test_reset_row() {
         let mut rb_a = create_rb();
-        let rb_b = create_rb();
+        let mut rb_b = create_rb();
         rb_a.step_row(20);
         rb_a.reset_row();
-        assert_eq!(
-            rb_a.color.convert::<RGBColor>().int_rgb_tup(),
-            rb_b.color.convert::<RGBColor>().int_rgb_tup()
-        );
+        assert_eq!(rb_a.get_color(), rb_b.get_color(),);
     }
 
     #[test]
     fn test_reset_col() {
         let mut rb_a = create_rb();
-        let rb_b = create_rb();
+        let mut rb_b = create_rb();
         rb_a.step_col(20);
         rb_a.reset_col();
-        assert_eq!(
-            rb_a.color.convert::<RGBColor>().int_rgb_tup(),
-            rb_b.color.convert::<RGBColor>().int_rgb_tup()
-        );
+        assert_eq!(rb_a.get_color(), rb_b.get_color(),);
     }
 }
