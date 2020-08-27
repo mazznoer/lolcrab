@@ -1,0 +1,23 @@
+name: Deploy
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  cargo_publish:
+    name: Publish Cargo Package
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+
+      - name: Publish to crates.io
+        run: cargo publish --token ${{ secrets.CRATES_IO_TOKEN }}
