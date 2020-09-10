@@ -26,7 +26,7 @@ impl Rainbow {
             current_col: 0,
             current_row: 0,
             cache: HashMap::new(),
-            base_hue: (color.hue() * (u32::MAX as f64 / 360.)) as u32,
+            base_hue: (color.hue() / 360. * u32::MAX as f64) as u32,
         }
     }
 
@@ -49,29 +49,25 @@ impl Rainbow {
     pub fn get_color(&mut self) -> (u8, u8, u8) {
         let mut hue = self.base_hue;
 
-        if self.shift_row >= 0 {
-            let (new_hue, _) = hue.overflowing_add(self.current_row as u32 * self.shift_row as u32);
-            hue = new_hue;
+        hue = if self.shift_row >= 0 {
+            hue.overflowing_add(self.current_row as u32 * self.shift_row as u32)
         } else {
-            let (new_hue, _) =
-                hue.overflowing_sub(self.current_row as u32 * (-self.shift_row) as u32);
-            hue = new_hue;
+            hue.overflowing_sub(self.current_row as u32 * (-self.shift_row) as u32)
         }
+        .0;
 
-        if self.shift_col >= 0 {
-            let (new_hue, _) = hue.overflowing_add(self.current_col as u32 * self.shift_col as u32);
-            hue = new_hue;
+        hue = if self.shift_col >= 0 {
+            hue.overflowing_add(self.current_col as u32 * self.shift_col as u32)
         } else {
-            let (new_hue, _) =
-                hue.overflowing_sub(self.current_col as u32 * (-self.shift_col) as u32);
-            hue = new_hue;
+            hue.overflowing_sub(self.current_col as u32 * (-self.shift_col) as u32)
         }
+        .0;
 
         if let Some(out) = self.cache.get(&hue) {
             return *out;
         }
 
-        self.color.set_hue((hue as f64) / (u32::MAX as f64));
+        self.color.set_hue(hue as f64 / u32::MAX as f64 * 360.);
         let out = self.color.convert::<RGBColor>().int_rgb_tup();
 
         self.cache.insert(hue, out);
@@ -152,8 +148,8 @@ mod tests {
     fn create_rb() -> Rainbow {
         Rainbow::new(
             RGBColor::from_hex_code("#f00000").unwrap().convert(),
-            (1. * (u32::MAX as f64 / 360.)) as i32,
-            (2. * (u32::MAX as f64 / 360.)) as i32,
+            (1. / 360. * u32::MAX as f64) as i32,
+            (2. / 360. * u32::MAX as f64) as i32,
         )
     }
 
