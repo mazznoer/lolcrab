@@ -14,6 +14,7 @@ default = ["structopt"]
 
 [dependencies]
 bstr = "0.2"
+lru = "0.6.0"
 rand = { version = "0.7", features = ["std", "small_rng"] }
 scarlet = "1.1"
 structopt = { version = "0.3", optional = true }

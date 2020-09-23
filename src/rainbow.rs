@@ -1,9 +1,7 @@
 use bstr::{io::BufReadExt, ByteSlice};
+use lru::LruCache;
 use scarlet::{color::XYZColor, prelude::*};
-use std::{
-    collections::HashMap,
-    io::{prelude::*, Write},
-};
+use std::io::{prelude::*, Write};
 use unicode_segmentation::UnicodeSegmentation;
 use unicode_width::UnicodeWidthChar;
 
@@ -13,7 +11,7 @@ pub struct Rainbow {
     shift_col: i32,
     shift_row: i32,
     base_hue: u32,
-    cache: HashMap<u32, (u8, u8, u8)>,
+    cache: LruCache<u32, (u8, u8, u8)>,
     color: XYZColor,
 }
 
@@ -25,7 +23,7 @@ impl Rainbow {
             shift_row,
             current_col: 0,
             current_row: 0,
-            cache: HashMap::new(),
+            cache: LruCache::new(512),
             base_hue: (color.hue() / 360. * u32::MAX as f64) as u32,
         }
     }
@@ -70,7 +68,7 @@ impl Rainbow {
         self.color.set_hue(hue as f64 / u32::MAX as f64 * 360.);
         let out = self.color.convert::<RGBColor>().int_rgb_tup();
 
-        self.cache.insert(hue, out);
+        self.cache.put(hue, out);
 
         out
     }
