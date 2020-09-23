@@ -1,8 +1,8 @@
 mod rainbow;
-#[cfg(feature = "structopt")]
+#[cfg(feature = "clap")]
 mod rainbow_cmd;
 
 pub use rainbow::*;
 
-#[cfg(feature = "structopt")]
+#[cfg(feature = "clap")]
 pub use rainbow_cmd::*;

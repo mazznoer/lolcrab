@@ -1,27 +1,27 @@
+use clap::Clap;
 use lcat::{Rainbow, RainbowCmd};
 use std::{
     fs::File,
     io::{self, BufReader},
     path::PathBuf,
 };
-use structopt::StructOpt;
 
 #[cfg(feature = "mimalloc")]
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-#[derive(StructOpt)]
-#[structopt(name = "lcat", about = "Terminal rainbows.")]
+#[derive(Clap)]
+#[clap(name = "lcat", about = "Terminal rainbows.")]
 pub struct Cmdline {
-    #[structopt(name = "File", default_value = "-", parse(from_os_str))]
+    #[clap(name = "File", default_value = "-", parse(from_os_str))]
     files: Vec<PathBuf>,
 
-    #[structopt(flatten)]
+    #[clap(flatten)]
     rainbow: RainbowCmd,
 }
 
 fn main() -> Result<(), io::Error> {
-    let opt = Cmdline::from_args();
+    let opt = Cmdline::parse();
 
     let mut rainbow: Rainbow = opt.rainbow.into();
 

@@ -1,32 +1,32 @@
 use crate::Rainbow;
+use clap::Clap;
 use rand::prelude::*;
 use scarlet::{colors::CIELCHColor, prelude::*};
-use structopt::StructOpt;
 
-#[derive(Debug, StructOpt)]
+#[derive(Debug, Clap)]
 pub struct RainbowCmd {
     /// How much the hue of the color gets shifted every column
-    #[structopt(short = "C", long, default_value = "1.6")]
+    #[clap(short = 'C', long, default_value = "1.6")]
     shift_col: f64,
 
     /// How much the hue of the color gets shifted every row
-    #[structopt(short = "R", long, default_value = "3.2")]
+    #[clap(short = 'R', long, default_value = "3.2")]
     shift_row: f64,
 
     /// Don't randomize sign of col and row shift value
-    #[structopt(short = "n", long)]
+    #[clap(short = 'n', long)]
     shift_sign_no_random: bool,
 
     /// Sets initial hue as defined by CIE L*C*h Color Scale [default: random]
-    #[structopt(short, long)]
+    #[clap(short, long)]
     hue: Option<f64>,
 
     /// Sets initial luminance as defined by CIE L*C*h Color Scale
-    #[structopt(short, long, default_value = "50")]
+    #[clap(short, long, default_value = "50")]
     luminance: f64,
 
     /// Sets initial chroma as defined by CIE L*C*h Color Scale
-    #[structopt(short, long, default_value = "128")]
+    #[clap(short, long, default_value = "128")]
     chroma: f64,
 }
 
