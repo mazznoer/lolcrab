@@ -15,7 +15,7 @@ default = ["clap"]
 [dependencies]
 bstr = "0.2"
 clap = { version = "3.0.0-beta.2", optional = true }
-lru = "0.6.0"
+lru = "0.6.1"
 rand = { version = "0.7", features = ["std", "small_rng"] }
 scarlet = "1.1"
 unicode-segmentation = "1.3"
