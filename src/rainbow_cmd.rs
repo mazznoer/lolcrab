@@ -33,7 +33,7 @@ pub struct RainbowCmd {
 impl Into<Rainbow> for RainbowCmd {
     fn into(self) -> Rainbow {
         let mut rng = SmallRng::from_entropy();
-        let hue = self.hue.unwrap_or_else(|| rng.gen_range(0.0, 360.0));
+        let hue = self.hue.unwrap_or_else(|| rng.gen_range(0.0..360.0));
 
         let color = CIELCHColor {
             l: self.luminance,
