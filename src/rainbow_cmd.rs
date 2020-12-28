@@ -1,43 +1,46 @@
-use crate::Rainbow;
+use crate::{color::*, Rainbow};
 use clap::Clap;
 use rand::prelude::*;
-use scarlet::{colors::CIELCHColor, prelude::*};
+use std::f64::consts::PI;
 
 #[derive(Debug, Clap)]
 pub struct RainbowCmd {
-    /// How much the hue of the color gets shifted every column
+    ///  How many degrees to shift text color hue for every column
     #[clap(short = 'C', long, default_value = "1.6")]
     shift_col: f64,
 
-    /// How much the hue of the color gets shifted every row
+    /// How many degrees to shift text color hue for every row
     #[clap(short = 'R', long, default_value = "3.2")]
     shift_row: f64,
 
-    /// Don't randomize sign of col and row shift value
+    /// Don't randomize sign of col and row shift values
     #[clap(short = 'n', long)]
     shift_sign_no_random: bool,
 
-    /// Sets initial hue as defined by CIE L*C*h Color Scale [default: random]
+    /// Sets initial hue of text color in degress [default: random]
     #[clap(short, long)]
     hue: Option<f64>,
 
-    /// Sets initial luminance as defined by CIE L*C*h Color Scale
-    #[clap(short, long, default_value = "50")]
+    /// Sets text color luminance
+    #[clap(short, long, default_value = "0.85")]
     luminance: f64,
 
-    /// Sets initial chroma as defined by CIE L*C*h Color Scale
-    #[clap(short, long, default_value = "128")]
+    /// Sets text color chroma
+    #[clap(short, long, default_value = "0.5")]
     chroma: f64,
 }
 
 impl Into<Rainbow> for RainbowCmd {
     fn into(self) -> Rainbow {
         let mut rng = SmallRng::from_entropy();
-        let hue = self.hue.unwrap_or_else(|| rng.gen_range(0.0..360.0));
+        let hue = self
+            .hue
+            .map(f64::to_radians)
+            .unwrap_or_else(|| rng.gen_range(-PI..PI));
 
-        let color = CIELCHColor {
-            l: self.luminance,
-            c: self.chroma,
+        let color = LCh {
+            L: self.luminance,
+            C: self.chroma,
             h: hue,
         };
 
@@ -54,7 +57,7 @@ impl Into<Rainbow> for RainbowCmd {
         };
 
         Rainbow::new(
-            color.convert(),
+            &color,
             (shift_col * (u32::MAX as f64 / 360.)) as i32,
             (shift_row * (u32::MAX as f64 / 360.)) as i32,
         )

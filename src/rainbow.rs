@@ -1,6 +1,6 @@
+use crate::color::*;
 use bstr::{io::BufReadExt, ByteSlice};
 use lru::LruCache;
-use scarlet::{color::XYZColor, prelude::*};
 use std::io::{prelude::*, Write};
 use unicode_segmentation::UnicodeSegmentation;
 use unicode_width::UnicodeWidthChar;
@@ -11,20 +11,23 @@ pub struct Rainbow {
     shift_col: i32,
     shift_row: i32,
     base_hue: u32,
-    cache: LruCache<u32, (u8, u8, u8)>,
-    color: XYZColor,
+    cache: LruCache<u32, RGB>,
+    color: Lab,
 }
 
 impl Rainbow {
-    pub fn new(color: XYZColor, shift_col: i32, shift_row: i32) -> Self {
+    pub fn new(color: impl Into<Lab>, shift_col: i32, shift_row: i32) -> Self {
+        let color = color.into();
+        let base_hue = color.hue_u32();
+
         Self {
             color,
+            base_hue,
             shift_col,
             shift_row,
             current_col: 0,
             current_row: 0,
             cache: LruCache::new(512),
-            base_hue: (color.hue() / 360. * u32::MAX as f64) as u32,
         }
     }
 
@@ -44,31 +47,47 @@ impl Rainbow {
         self.current_col = 0;
     }
 
-    pub fn get_color(&mut self) -> (u8, u8, u8) {
+    pub fn get_color(&mut self) -> RGB {
         let mut hue = self.base_hue;
 
         hue = if self.shift_row >= 0 {
-            hue.overflowing_add(self.current_row as u32 * self.shift_row as u32)
+            hue.overflowing_add(
+                (self.current_row as u32)
+                    .overflowing_mul(self.shift_row as u32)
+                    .0,
+            )
         } else {
-            hue.overflowing_sub(self.current_row as u32 * (-self.shift_row) as u32)
+            hue.overflowing_sub(
+                (self.current_row as u32)
+                    .overflowing_mul(-self.shift_row as u32)
+                    .0,
+            )
         }
         .0;
 
         hue = if self.shift_col >= 0 {
-            hue.overflowing_add(self.current_col as u32 * self.shift_col as u32)
+            hue.overflowing_add(
+                (self.current_col as u32)
+                    .overflowing_mul(self.shift_col as u32)
+                    .0,
+            )
         } else {
-            hue.overflowing_sub(self.current_col as u32 * (-self.shift_col) as u32)
+            hue.overflowing_sub(
+                (self.current_col as u32)
+                    .overflowing_mul((-self.shift_col) as u32)
+                    .0,
+            )
         }
         .0;
 
         if let Some(out) = self.cache.get(&hue) {
-            return *out;
+            return out.clone();
         }
 
-        self.color.set_hue(hue as f64 / u32::MAX as f64 * 360.);
-        let out = self.color.convert::<RGBColor>().int_rgb_tup();
+        self.color.set_hue_u32(hue);
+        let out: RGB = (&self.color).into();
 
-        self.cache.put(hue, out);
+        self.cache.put(hue, out.clone());
 
         out
     }
@@ -93,8 +112,12 @@ impl Rainbow {
         }
 
         if !escaping {
-            let (r, g, b) = self.get_color();
-            write!(out, "\x1B[38;2;{};{};{}m{}", r, g, b, grapheme)?;
+            let color = self.get_color();
+            write!(
+                out,
+                "\x1B[38;2;{};{};{}m{}",
+                color.r, color.g, color.b, grapheme
+            )?;
             self.step_col(grapheme.chars().next().and_then(|c| c.width()).unwrap_or(0));
         } else {
             // write!(out, "{}", grapheme)?;
@@ -145,7 +168,11 @@ mod tests {
 
     fn create_rb() -> Rainbow {
         Rainbow::new(
-            RGBColor::from_hex_code("#f00000").unwrap().convert(),
+            &RGB {
+                r: 0xf0,
+                g: 0,
+                b: 0,
+            },
             (1. / 360. * u32::MAX as f64) as i32,
             (2. / 360. * u32::MAX as f64) as i32,
         )

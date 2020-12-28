@@ -1,6 +1,6 @@
 [package]
 name = "lcat"
-version = "0.5.0"
+version = "0.6.0"
 authors = ["David Knaack <davidkna@users.noreply.github.com>"]
 edition = "2018"
 description = "Another lolcat in rust! Full unicode support, escapes for ANSI escape sequences, hue shift in CIE L*C*h."
@@ -17,7 +17,6 @@ bstr = "0.2"
 clap = { version = "3.0.0-beta.2", optional = true }
 lru = "0.6.3"
 rand = { version = "0.8", features = ["std", "small_rng"] }
-scarlet = "1.1"
 unicode-segmentation = "1.7"
 unicode-width = "0.1"
 
