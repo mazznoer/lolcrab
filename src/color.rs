@@ -44,13 +44,8 @@ fn from_linear_srgb(x: f64) -> u8 {
 pub trait Hue {
     fn hue(&self) -> f64;
     fn set_hue(&mut self, hue: f64);
-
-    fn hue_u32(&self) -> u32 {
-        ((self.hue() + PI) / TAU * (u32::MAX as f64)) as u32
-    }
-
-    fn set_hue_u32(&mut self, hue: u32) {
-        self.set_hue((hue as f64) / (u32::MAX as f64) * TAU - PI)
+    fn set_hue_with_chroma(&mut self, hue: f64, _chroma: f64) {
+        self.set_hue(hue);
     }
 }
 
@@ -64,24 +59,34 @@ impl Hue for LCh {
     }
 }
 
+pub fn hue_as_u32(hue: f64) -> u32 {
+    ((hue + PI) / TAU * (u32::MAX as f64)) as u32
+}
+
+pub fn hue_as_f64(hue: u32) -> f64 {
+    (hue as f64) / (u32::MAX as f64) * TAU - PI
+}
+
+impl Lab {
+    pub fn chroma(&self) -> f64 {
+        self.a.hypot(self.b)
+    }
+}
+
 impl Hue for Lab {
     fn hue(&self) -> f64 {
         self.b.atan2(self.a)
     }
 
     fn set_hue(&mut self, hue: f64) {
-        let c = self.chroma();
+        self.set_hue_with_chroma(hue, self.chroma());
+    }
 
+    fn set_hue_with_chroma(&mut self, hue: f64, chroma: f64) {
         let (hue_sin, hue_cos) = hue.sin_cos();
 
-        self.a = c * hue_sin;
-        self.b = c * hue_cos;
-    }
-}
-
-impl Lab {
-    pub fn chroma(&self) -> f64 {
-        self.a.hypot(self.b)
+        self.a = chroma * hue_sin;
+        self.b = chroma * hue_cos;
     }
 }
 

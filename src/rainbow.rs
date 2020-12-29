@@ -13,16 +13,19 @@ pub struct Rainbow {
     base_hue: u32,
     cache: LruCache<u32, RGB>,
     color: Lab,
+    chroma: f64,
 }
 
 impl Rainbow {
     pub fn new(color: impl Into<Lab>, shift_col: i32, shift_row: i32) -> Self {
         let color = color.into();
-        let base_hue = color.hue_u32();
+        let base_hue = hue_as_u32(color.hue());
+        let chroma = color.chroma();
 
         Self {
             color,
             base_hue,
+            chroma,
             shift_col,
             shift_row,
             current_col: 0,
@@ -84,7 +87,7 @@ impl Rainbow {
             return out.clone();
         }
 
-        self.color.set_hue_u32(hue);
+        self.color.set_hue_with_chroma(hue_as_f64(hue), self.chroma);
         let out: RGB = (&self.color).into();
 
         self.cache.put(hue, out.clone());
