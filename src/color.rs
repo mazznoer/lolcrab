@@ -182,29 +182,4 @@ mod test {
 
         assert_eq!(c_rgb1, c_rgb2);
     }
-
-    #[test]
-    fn test_hue() {
-        let c_rgb = RGB {
-            r: 80,
-            g: 160,
-            b: 240,
-        };
-
-        let mut c_lch = LCh::from(&c_rgb);
-
-        let h = c_lch.hue_u32();
-
-        let a = RGB::from(&c_lch);
-        c_lch.set_hue_u32(h);
-        let b = RGB::from(&c_lch);
-
-        assert_eq!(a, b);
-
-        c_lch.set_hue(0.0);
-        let a = RGB::from(&c_lch);
-        c_lch.set_hue_u32(u32::MAX / 2);
-        let b = RGB::from(&c_lch);
-        assert_eq!(a, b);
-    }
 }
