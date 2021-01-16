@@ -26,7 +26,7 @@ pub struct RainbowCmd {
     luminance: f64,
 
     /// Sets text color chroma
-    #[clap(short, long, default_value = "0.5")]
+    #[clap(short, long, default_value = "0.3")]
     chroma: f64,
 }
 
