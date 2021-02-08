@@ -30,30 +30,30 @@ pub struct RainbowCmd {
     chroma: f64,
 }
 
-impl Into<Rainbow> for RainbowCmd {
-    fn into(self) -> Rainbow {
+impl From<RainbowCmd> for Rainbow {
+    fn from(cmd: RainbowCmd) -> Rainbow {
         let mut rng = SmallRng::from_entropy();
-        let hue = self
+        let hue = cmd
             .hue
             .map(f64::to_radians)
             .unwrap_or_else(|| rng.gen_range(-PI..PI));
 
         let color = LCh {
-            L: self.luminance,
-            C: self.chroma,
+            L: cmd.luminance,
+            C: cmd.chroma,
             h: hue,
         };
 
-        let shift_col = if self.shift_sign_no_random || rng.gen() {
-            self.shift_col
+        let shift_col = if cmd.shift_sign_no_random || rng.gen() {
+            cmd.shift_col
         } else {
-            -self.shift_col
+            -cmd.shift_col
         };
 
-        let shift_row = if self.shift_sign_no_random || rng.gen() {
-            self.shift_col
+        let shift_row = if cmd.shift_sign_no_random || rng.gen() {
+            cmd.shift_col
         } else {
-            -self.shift_col
+            -cmd.shift_col
         };
 
         Rainbow::new(
