@@ -13,12 +13,12 @@ license = "MIT OR Apache-2.0"
 default = ["clap"]
 
 [dependencies]
-bstr = "0.2"
+bstr = "0.2.15"
 clap = { version = "3.0.0-beta.2", optional = true }
-lru = "0.6.3"
-rand = { version = "0.8", default-features = false, features = ["std", "small_rng"] }
-unicode-segmentation = "1.7"
-unicode-width = "0.1"
+lru = "0.6.4"
+rand = { version = "0.8.3", default-features = false, features = ["std", "small_rng"] }
+unicode-segmentation = "1.7.1"
+unicode-width = "0.1.8"
 
 # Allocator
-mimalloc = { version = "0.1.22", optional = true, default-features = false }
+mimalloc = { version = "0.1.24", optional = true, default-features = false }
