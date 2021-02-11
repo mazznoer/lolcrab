@@ -1,6 +1,4 @@
-use crate::color::*;
 use bstr::{io::BufReadExt, ByteSlice};
-use lru::LruCache;
 use std::io::{prelude::*, Write};
 use unicode_segmentation::UnicodeSegmentation;
 use unicode_width::UnicodeWidthChar;
@@ -8,91 +6,48 @@ use unicode_width::UnicodeWidthChar;
 pub struct Rainbow {
     current_row: usize,
     current_col: usize,
-    shift_col: i32,
-    shift_row: i32,
-    base_hue: u32,
-    cache: LruCache<u32, RGB>,
-    color: Lab,
-    chroma: f64,
+    shift_col: f64,
+    shift_row: f64,
+    position: f64,
+    gradient: colorgrad::Gradient,
 }
 
 impl Rainbow {
-    pub fn new(color: impl Into<Lab>, shift_col: i32, shift_row: i32) -> Self {
-        let color = color.into();
-        let base_hue = hue_as_u32(color.hue());
-        let chroma = color.chroma();
-
+    pub fn new(gradient: colorgrad::Gradient, start: f64, shift_col: f64, shift_row: f64) -> Self {
         Self {
-            color,
-            base_hue,
-            chroma,
+            gradient,
             shift_col,
             shift_row,
-            current_col: 0,
+            position: start,
             current_row: 0,
-            cache: LruCache::new(512),
+            current_col: 0,
         }
     }
 
     pub fn step_row(&mut self, n_row: usize) {
         self.current_row += n_row;
+        self.position += n_row as f64 * self.shift_row;
     }
 
     pub fn step_col(&mut self, n_col: usize) {
         self.current_col += n_col;
+        self.position += n_col as f64 * self.shift_col;
     }
 
     pub fn reset_row(&mut self) {
+        self.position -= self.current_row as f64 * self.shift_row;
         self.current_row = 0;
     }
 
     pub fn reset_col(&mut self) {
+        self.position -= self.current_col as f64 * self.shift_col;
         self.current_col = 0;
     }
 
-    pub fn get_color(&mut self) -> RGB {
-        let mut hue = self.base_hue;
+    pub fn get_color(&self) -> (u8, u8, u8) {
+        let (r, g, b, _) = self.gradient.at(self.position).rgba_u8();
 
-        hue = if self.shift_row >= 0 {
-            hue.overflowing_add(
-                (self.current_row as u32)
-                    .overflowing_mul(self.shift_row as u32)
-                    .0,
-            )
-        } else {
-            hue.overflowing_sub(
-                (self.current_row as u32)
-                    .overflowing_mul(-self.shift_row as u32)
-                    .0,
-            )
-        }
-        .0;
-
-        hue = if self.shift_col >= 0 {
-            hue.overflowing_add(
-                (self.current_col as u32)
-                    .overflowing_mul(self.shift_col as u32)
-                    .0,
-            )
-        } else {
-            hue.overflowing_sub(
-                (self.current_col as u32)
-                    .overflowing_mul((-self.shift_col) as u32)
-                    .0,
-            )
-        }
-        .0;
-
-        if let Some(out) = self.cache.get(&hue) {
-            return out.clone();
-        }
-
-        self.color.set_hue_with_chroma(hue_as_f64(hue), self.chroma);
-        let out: RGB = (&self.color).into();
-
-        self.cache.put(hue, out.clone());
-
-        out
+        (r, g, b)
     }
 
     #[inline]
@@ -115,15 +70,10 @@ impl Rainbow {
         }
 
         if !escaping {
-            let color = self.get_color();
-            write!(
-                out,
-                "\x1B[38;2;{};{};{}m{}",
-                color.r, color.g, color.b, grapheme
-            )?;
+            let (r, g, b) = self.get_color();
+            write!(out, "\x1B[38;2;{};{};{}m{}", r, g, b, grapheme)?;
             self.step_col(grapheme.chars().next().and_then(|c| c.width()).unwrap_or(0));
         } else {
-            // write!(out, "{}", grapheme)?;
             out.write_all(grapheme.as_bytes())?;
             escaping = grapheme.len() != 1 || {
                 let c = grapheme.as_bytes()[0];
@@ -170,15 +120,7 @@ mod tests {
     use super::*;
 
     fn create_rb() -> Rainbow {
-        Rainbow::new(
-            &RGB {
-                r: 0xf0,
-                g: 0,
-                b: 0,
-            },
-            (1. / 360. * u32::MAX as f64) as i32,
-            (2. / 360. * u32::MAX as f64) as i32,
-        )
+        Rainbow::new(colorgrad::rainbow(), 0.0, 0.1, 0.2)
     }
 
     #[test]
@@ -225,7 +167,7 @@ mod tests {
     #[test]
     fn test_reset_row() {
         let mut rb_a = create_rb();
-        let mut rb_b = create_rb();
+        let rb_b = create_rb();
         rb_a.step_row(20);
         rb_a.reset_row();
         assert_eq!(rb_a.get_color(), rb_b.get_color(),);
@@ -234,7 +176,7 @@ mod tests {
     #[test]
     fn test_reset_col() {
         let mut rb_a = create_rb();
-        let mut rb_b = create_rb();
+        let rb_b = create_rb();
         rb_a.step_col(20);
         rb_a.reset_col();
         assert_eq!(rb_a.get_color(), rb_b.get_color(),);

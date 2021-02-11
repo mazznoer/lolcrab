@@ -1,7 +1,11 @@
-use crate::{color::*, Rainbow};
-use clap::Clap;
-use rand::prelude::*;
-use std::f64::consts::PI;
+use crate::Rainbow;
+use clap::{ArgEnum, Clap};
+
+#[derive(Debug, ArgEnum)]
+pub enum RainbowStyle {
+    Rainbow,
+    Sinebow,
+}
 
 #[derive(Debug, Clap)]
 pub struct RainbowCmd {
@@ -18,48 +22,35 @@ pub struct RainbowCmd {
     shift_sign_no_random: bool,
 
     /// Sets initial hue of text color in degress [default: random]
-    #[clap(short, long)]
+    #[clap(short = 'H', long)]
     hue: Option<f64>,
 
-    /// Sets text color luminance
-    #[clap(short, long, default_value = "0.85")]
-    luminance: f64,
-
-    /// Sets text color chroma
-    #[clap(short, long, default_value = "0.3")]
-    chroma: f64,
+    /// Rainbow mode
+    #[clap(short, long, arg_enum, default_value = "rainbow")]
+    style: RainbowStyle,
 }
 
 impl From<RainbowCmd> for Rainbow {
     fn from(cmd: RainbowCmd) -> Rainbow {
-        let mut rng = SmallRng::from_entropy();
-        let hue = cmd
-            .hue
-            .map(f64::to_radians)
-            .unwrap_or_else(|| rng.gen_range(-PI..PI));
-
-        let color = LCh {
-            L: cmd.luminance,
-            C: cmd.chroma,
-            h: hue,
-        };
-
-        let shift_col = if cmd.shift_sign_no_random || rng.gen() {
+        let shift_col = if cmd.shift_sign_no_random || fastrand::bool() {
             cmd.shift_col
         } else {
             -cmd.shift_col
-        };
+        } / 360.;
 
-        let shift_row = if cmd.shift_sign_no_random || rng.gen() {
-            cmd.shift_col
+        let shift_row = if cmd.shift_sign_no_random || fastrand::bool() {
+            cmd.shift_row
         } else {
-            -cmd.shift_col
+            -cmd.shift_row
+        } / 360.;
+
+        let start = cmd.hue.map(|hue| hue / 360.).unwrap_or_else(fastrand::f64);
+
+        let grad = match cmd.style {
+            RainbowStyle::Rainbow => colorgrad::rainbow(),
+            RainbowStyle::Sinebow => colorgrad::sinebow(),
         };
 
-        Rainbow::new(
-            &color,
-            (shift_col * (u32::MAX as f64 / 360.)) as i32,
-            (shift_row * (u32::MAX as f64 / 360.)) as i32,
-        )
+        Rainbow::new(grad, start, shift_col, shift_row)
     }
 }

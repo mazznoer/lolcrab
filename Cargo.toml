@@ -1,9 +1,9 @@
 [package]
 name = "lcat"
-version = "0.6.1"
+version = "0.7.0"
 authors = ["David Knaack <davidkna@users.noreply.github.com>"]
 edition = "2018"
-description = "Another lolcat in rust! Full unicode support, escapes for ANSI escape sequences, hue shift in CIE L*C*h."
+description = "Another lolcat in rust! Full unicode support, escapes for ANSI escape sequences, hue shift in Cubehelix."
 readme = "README.md"
 repository = "https://github.com/davidkna/lcat-rs"
 documentation = "https://docs.rs/lcat/"
@@ -15,8 +15,8 @@ default = ["clap"]
 [dependencies]
 bstr = "0.2.15"
 clap = { version = "3.0.0-beta.2", optional = true }
-lru = "0.6.4"
-rand = { version = "0.8.3", default-features = false, features = ["std", "small_rng"] }
+colorgrad = "0.3.0"
+fastrand = "1.4.0"
 unicode-segmentation = "1.7.1"
 unicode-width = "0.1.8"
 
