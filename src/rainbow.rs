@@ -176,7 +176,7 @@ mod tests {
     #[test]
     fn test_reset_row() {
         let mut rb_a = create_rb();
-        let rb_b = create_rb();
+        let mut rb_b = create_rb();
         rb_a.step_row(20);
         rb_a.reset_row();
         assert_eq!(rb_a.get_color(), rb_b.get_color(),);
@@ -185,7 +185,7 @@ mod tests {
     #[test]
     fn test_reset_col() {
         let mut rb_a = create_rb();
-        let rb_b = create_rb();
+        let mut rb_b = create_rb();
         rb_a.step_col(20);
         rb_a.reset_col();
         assert_eq!(rb_a.get_color(), rb_b.get_color(),);
