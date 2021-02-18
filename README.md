@@ -5,7 +5,7 @@ lolcat in rust! With emoji support and color transformations in the Cubehelix co
 ## Usage
 
 ```text
-lcat 
+lcat
 Terminal rainbows.
 
 USAGE:
@@ -27,3 +27,6 @@ OPTIONS:
                                    3.2]
     -s, --style <style>            Rainbow mode [default: rainbow] [possible values: rainbow,
                                    sinebow]
+```
+## Screenshot
+![a demo screenshot of lcat in action](.github/screenshot.png)
