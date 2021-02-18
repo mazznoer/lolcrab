@@ -44,8 +44,17 @@ impl Rainbow {
         self.current_col = 0;
     }
 
-    pub fn get_color(&self) -> (u8, u8, u8) {
-        let (r, g, b, _) = self.gradient.at(self.position).rgba_u8();
+    fn get_position(&mut self) -> f64 {
+        if self.position < 0.0 || self.position > 1.0 {
+            self.position -= self.position.floor()
+        }
+
+        self.position
+    }
+
+    pub fn get_color(&mut self) -> (u8, u8, u8) {
+        let position = self.get_position();
+        let (r, g, b, _) = self.gradient.at(position).rgba_u8();
 
         (r, g, b)
     }
