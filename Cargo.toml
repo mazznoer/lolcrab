@@ -13,7 +13,7 @@ license = "MIT OR Apache-2.0"
 default = ["clap"]
 
 [dependencies]
-bstr = "0.2.15"
+bstr = "0.2.16"
 clap = { version = "3.0.0-beta.2", optional = true }
 colorgrad = "0.4.0"
 fastrand = "1.4.1"
