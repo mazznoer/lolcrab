@@ -21,12 +21,10 @@ FLAGS:
 
 OPTIONS:
     -H, --hue <hue>                Sets initial hue of text color in degress [default: random]
-    -C, --shift-col <shift-col>    How many degrees to shift text color hue for every column
-                                   [default: 1.6]
-    -R, --shift-row <shift-row>    How many degrees to shift text color hue for every row [default:
-                                   3.2]
-    -s, --style <style>            Rainbow mode [default: rainbow] [possible values: rainbow,
-                                   sinebow]
+    -S, --seed <seed>              Sets seed [default: random]
+    -C, --shift-col <shift-col>    How many degrees to shift text color hue for every column [default: 1.6]
+    -R, --shift-row <shift-row>    How many degrees to shift text color hue for every row [default: 3.2]
+    -s, --style <style>            Rainbow mode [default: rainbow] [possible values: rainbow, sinebow]
 ```
 ## Screenshot
 ![a demo screenshot of lcat in action](.github/screenshot.png)
