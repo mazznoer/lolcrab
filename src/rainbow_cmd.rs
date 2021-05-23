@@ -28,10 +28,18 @@ pub struct RainbowCmd {
     /// Rainbow mode
     #[clap(short, long, arg_enum, default_value = "rainbow")]
     style: RainbowStyle,
+
+    /// Sets seed [default: random]
+    #[clap(short = 'S', long)]
+    seed: Option<u64>,
 }
 
 impl From<RainbowCmd> for Rainbow {
     fn from(cmd: RainbowCmd) -> Rainbow {
+        if let Some(seed) = cmd.seed {
+            fastrand::seed(seed);
+        }
+
         let shift_col = if cmd.shift_sign_no_random || fastrand::bool() {
             cmd.shift_col
         } else {
