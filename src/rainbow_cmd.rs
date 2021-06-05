@@ -35,7 +35,7 @@ pub struct RainbowCmd {
 }
 
 impl From<RainbowCmd> for Rainbow {
-    fn from(cmd: RainbowCmd) -> Rainbow {
+    fn from(cmd: RainbowCmd) -> Self {
         if let Some(seed) = cmd.seed {
             fastrand::seed(seed);
         }
@@ -52,13 +52,13 @@ impl From<RainbowCmd> for Rainbow {
             -cmd.shift_row
         } / 360.;
 
-        let start = cmd.hue.map(|hue| hue / 360.).unwrap_or_else(fastrand::f64);
+        let start = cmd.hue.map_or_else(fastrand::f64, |hue| hue / 360.);
 
         let grad = match cmd.style {
             RainbowStyle::Rainbow => colorgrad::rainbow(),
             RainbowStyle::Sinebow => colorgrad::sinebow(),
         };
 
-        Rainbow::new(grad, start, shift_col, shift_row)
+        Self::new(grad, start, shift_col, shift_row)
     }
 }

@@ -1,3 +1,5 @@
+#![warn(clippy::pedantic, clippy::nursery)]
+
 use clap::Clap;
 use lcat::{Rainbow, RainbowCmd};
 use std::{

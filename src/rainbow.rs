@@ -13,7 +13,13 @@ pub struct Rainbow {
 }
 
 impl Rainbow {
-    pub fn new(gradient: colorgrad::Gradient, start: f64, shift_col: f64, shift_row: f64) -> Self {
+    #[must_use]
+    pub const fn new(
+        gradient: colorgrad::Gradient,
+        start: f64,
+        shift_col: f64,
+        shift_row: f64,
+    ) -> Self {
         Self {
             gradient,
             shift_col,
@@ -78,20 +84,29 @@ impl Rainbow {
             return Ok(false);
         }
 
-        if !escaping {
-            let (r, g, b) = self.get_color();
-            write!(out, "\x1B[38;2;{};{};{}m{}", r, g, b, grapheme)?;
-            self.step_col(grapheme.chars().next().and_then(|c| c.width()).unwrap_or(0));
-        } else {
+        if escaping {
             out.write_all(grapheme.as_bytes())?;
             escaping = grapheme.len() != 1 || {
                 let c = grapheme.as_bytes()[0];
                 !(b'a'..=b'z').contains(&c) && !(b'A'..=b'Z').contains(&c)
             };
+        } else {
+            let (r, g, b) = self.get_color();
+            write!(out, "\x1B[38;2;{};{};{}m{}", r, g, b, grapheme)?;
+            self.step_col(
+                grapheme
+                    .chars()
+                    .next()
+                    .and_then(UnicodeWidthChar::width)
+                    .unwrap_or(0),
+            );
         }
         Ok(escaping)
     }
 
+    /// # Errors
+    ///
+    /// Will return `Err` if `out` causes I/O erros
     pub fn colorize(&mut self, text: &[u8], out: &mut impl Write) -> std::io::Result<()> {
         let mut escaping = false;
         for grapheme in text.graphemes() {
@@ -102,6 +117,9 @@ impl Rainbow {
         out.flush()
     }
 
+    /// # Errors
+    ///
+    /// Will return `Err` if `out` causes I/O erros
     pub fn colorize_str(&mut self, text: &str, out: &mut impl Write) -> std::io::Result<()> {
         let mut escaping = false;
         for grapheme in UnicodeSegmentation::graphemes(text, true) {
@@ -112,12 +130,15 @@ impl Rainbow {
         out.flush()
     }
 
+    /// # Errors
+    ///
+    /// Will return `Err` if `input` or `out` cause I/O errors
     pub fn colorize_read(
         &mut self,
         input: &mut impl BufRead,
         out: &mut impl Write,
     ) -> std::io::Result<()> {
-        input.for_byte_line_with_terminator(|ref line| {
+        input.for_byte_line_with_terminator(|line| {
             self.colorize(line, out)?;
             Ok(true)
         })
