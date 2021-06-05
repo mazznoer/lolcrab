@@ -52,7 +52,7 @@ impl Rainbow {
 
     fn get_position(&mut self) -> f64 {
         if self.position < 0.0 || self.position > 1.0 {
-            self.position -= self.position.floor()
+            self.position -= self.position.floor();
         }
 
         self.position
