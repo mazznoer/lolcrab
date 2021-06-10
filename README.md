@@ -16,6 +16,7 @@ ARGS:
 
 FLAGS:
     -h, --help                    Prints help information
+    -i, --invert                  Invert background and foreground
     -n, --shift-sign-no-random    Don't randomize sign of col and row shift values
     -V, --version                 Prints version information
 

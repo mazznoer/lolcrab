@@ -10,6 +10,7 @@ pub struct Rainbow {
     shift_row: f64,
     position: f64,
     gradient: colorgrad::Gradient,
+    invert: bool,
 }
 
 impl Rainbow {
@@ -19,6 +20,7 @@ impl Rainbow {
         start: f64,
         shift_col: f64,
         shift_row: f64,
+        invert: bool,
     ) -> Self {
         Self {
             gradient,
@@ -27,6 +29,7 @@ impl Rainbow {
             position: start,
             current_row: 0,
             current_col: 0,
+            invert,
         }
     }
 
@@ -80,6 +83,9 @@ impl Rainbow {
         if grapheme == "\n" {
             self.reset_col();
             self.step_row(1);
+            if self.invert {
+                out.write_all(b"\x1B[49m")?;
+            }
             out.write_all(b"\n")?;
             return Ok(false);
         }
@@ -92,7 +98,11 @@ impl Rainbow {
             };
         } else {
             let (r, g, b) = self.get_color();
-            write!(out, "\x1B[38;2;{};{};{}m{}", r, g, b, grapheme)?;
+            if self.invert {
+                write!(out, "\x1B[38;2;0;0;0;48;2;{};{};{}m{}", r, g, b, grapheme)?;
+            } else {
+                write!(out, "\x1B[38;2;{};{};{}m{}", r, g, b, grapheme)?;
+            }
             self.step_col(
                 grapheme
                     .chars()
@@ -114,6 +124,9 @@ impl Rainbow {
         }
 
         out.write_all(b"\x1B[39m")?;
+        if self.invert {
+            out.write_all(b"\x1B[49m")?;
+        }
         out.flush()
     }
 
@@ -127,6 +140,9 @@ impl Rainbow {
         }
 
         out.write_all(b"\x1B[39m")?;
+        if self.invert {
+            out.write_all(b"\x1B[49m")?;
+        }
         out.flush()
     }
 
@@ -150,7 +166,7 @@ mod tests {
     use super::*;
 
     fn create_rb() -> Rainbow {
-        Rainbow::new(colorgrad::rainbow(), 0.0, 0.1, 0.2)
+        Rainbow::new(colorgrad::rainbow(), 0.0, 0.1, 0.2, false)
     }
 
     #[test]

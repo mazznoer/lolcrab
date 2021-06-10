@@ -32,6 +32,10 @@ pub struct RainbowCmd {
     /// Sets seed [default: random]
     #[clap(short = 'S', long)]
     seed: Option<u64>,
+
+    /// Invert background and foreground
+    #[clap(short = 'i', long)]
+    invert: bool,
 }
 
 impl From<RainbowCmd> for Rainbow {
@@ -59,6 +63,6 @@ impl From<RainbowCmd> for Rainbow {
             RainbowStyle::Sinebow => colorgrad::sinebow(),
         };
 
-        Self::new(grad, start, shift_col, shift_row)
+        Self::new(grad, start, shift_col, shift_row, cmd.invert)
     }
 }
