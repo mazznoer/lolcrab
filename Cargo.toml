@@ -14,7 +14,7 @@ default = ["clap"]
 
 [dependencies]
 bstr = "0.2.16"
-clap = { version = "3.0.0-beta.2", optional = true }
+clap = { version = "3.0.0-beta.4", optional = true }
 colorgrad = "0.4.0"
 fastrand = "1.5.0"
 unicode-segmentation = "1.8.0"
