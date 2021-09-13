@@ -1,31 +1,39 @@
-# lcat
+# `lolcrab`
 
-lolcat in rust! With emoji support and color transformations in the Cubehelix color space.
+[![crates.io](https://img.shields.io/crates/v/lolcrab.svg)](https://crates.io/crates/lolcrab)
+
+Like `lolcat` but with noise and more colorful.
+
+![lolcrab](docs/images/lolcrab.png)
+
+## Installation
+
+`lolcrab` can be installed with [cargo](https://www.rust-lang.org/tools/install).
+
+```shell
+cargo install lolcrab
+```
 
 ## Usage
 
 ```text
-lcat
-Terminal rainbows.
-
 USAGE:
-    lcat [FLAGS] [OPTIONS] [File]...
+    lolcrab [FLAGS] [OPTIONS] [--] [File]...
 
 ARGS:
     <File>...    [default: -]
 
 FLAGS:
-    -h, --help                    Prints help information
-    -i, --invert                  Invert background and foreground
-    -n, --shift-sign-no-random    Don't randomize sign of col and row shift values
-    -V, --version                 Prints version information
+    -h, --help       Print help information
+    -i, --invert     Colorize the background
+    -V, --version    Print version information
 
 OPTIONS:
-    -H, --hue <hue>                Sets initial hue of text color in degress [default: random]
-    -S, --seed <seed>              Sets seed [default: random]
-    -C, --shift-col <shift-col>    How many degrees to shift text color hue for every column [default: 1.6]
-    -R, --shift-row <shift-row>    How many degrees to shift text color hue for every row [default: 3.2]
-    -s, --style <style>            Rainbow mode [default: rainbow] [possible values: rainbow, sinebow]
+    -c, --custom <COLOR>...    Create custom gradient using the specified colors
+    -g, --gradient <NAME>      Sets color gradient [default: rainbow] [possible values: cividis,
+                               cool, cubehelix, inferno, magma, plasma, rainbow, rd-yl-gn, sinebow,
+                               spectral, turbo, viridis, warm]
+    -s, --scale <FLOAT>        Sets noise scale. Try value between 0.01 .. 0.2 [default: 0.034]
+    -S, --seed <NUM>           Sets seed [default: random]
+        --sharp <NUM>          Sharp gradient
 ```
-## Screenshot
-![a demo screenshot of lcat in action](.github/screenshot.png)
