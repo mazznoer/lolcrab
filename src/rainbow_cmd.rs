@@ -33,6 +33,10 @@ pub struct RainbowCmd {
     #[clap(short = 'c', long, parse(try_from_str = parse_color), value_name = "COLOR")]
     custom: Option<Vec<Color>>,
 
+    /// Sharp gradient
+    #[clap(long, value_name = "NUM")]
+    sharp: Option<u8>,
+
     /// Sets noise scale. Try value between 0.01 .. 0.2
     #[clap(short, long, default_value = "0.034", value_name = "FLOAT")]
     scale: f64,
@@ -71,6 +75,16 @@ impl From<RainbowCmd> for Rainbow {
                 Gradient::Viridis => colorgrad::viridis(),
                 Gradient::Warm => colorgrad::warm(),
             }
+        };
+
+        let grad = if let Some(n) = cmd.sharp {
+            if n > 1 {
+                grad.sharp(n as usize, 0.15)
+            } else {
+                grad
+            }
+        } else {
+            grad
         };
 
         Self::new(grad, cmd.seed, cmd.scale, cmd.invert)
