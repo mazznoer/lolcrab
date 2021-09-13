@@ -1,4 +1,5 @@
 use bstr::{io::BufReadExt, ByteSlice};
+use colorgrad::Color;
 use noise::{NoiseFn, Seedable};
 use std::io::{prelude::*, Write};
 use unicode_segmentation::UnicodeSegmentation;
@@ -55,11 +56,9 @@ impl Rainbow {
         remap(t, -0.5, 0.5, 0.0, 1.0)
     }
 
-    pub fn get_color(&mut self) -> (u8, u8, u8) {
+    pub fn get_color(&mut self) -> Color {
         let position = self.get_position();
-        let (r, g, b, _) = self.gradient.at(position).rgba_u8();
-
-        (r, g, b)
+        self.gradient.at(position)
     }
 
     #[inline]
@@ -91,9 +90,24 @@ impl Rainbow {
                 !(b'a'..=b'z').contains(&c) && !(b'A'..=b'Z').contains(&c)
             };
         } else {
-            let (r, g, b) = self.get_color();
+            let col = self.get_color();
+            let (r, g, b, _) = col.rgba_u8();
+
             if self.invert {
-                write!(out, "\x1B[38;2;0;0;0;48;2;{};{};{}m{}", r, g, b, grapheme)?;
+                let lum = get_luminance(&col);
+
+                let fg = if lum < 0.2 {
+                    set_luminance(&col, lum + 0.25)
+                } else {
+                    set_luminance(&col, lum - 0.35)
+                }
+                .rgba_u8();
+
+                write!(
+                    out,
+                    "\x1B[38;2;{};{};{};48;2;{};{};{}m{}",
+                    fg.0, fg.1, fg.2, r, g, b, grapheme
+                )?;
             } else {
                 write!(out, "\x1B[38;2;{};{};{}m{}", r, g, b, grapheme)?;
             }
@@ -158,6 +172,48 @@ impl Rainbow {
 // Map value which is in range [a, b] to range [c, d]
 fn remap(value: f64, a: f64, b: f64, c: f64, d: f64) -> f64 {
     (value - a) * ((d - c) / (b - a)) + c
+}
+
+fn get_luminance(col: &Color) -> f64 {
+    let (r, g, b, _) = col.rgba();
+    0.299 * r + 0.587 * g + 0.114 * b
+}
+
+fn set_luminance(col: &Color, lum: f64) -> Color {
+    // https://github.com/gka/chroma.js/blob/master/src/ops/luminance.js
+
+    if lum <= 0.0 {
+        return Color::from_rgb(0.0, 0.0, 0.0);
+    }
+
+    if lum >= 1.0 {
+        return Color::from_rgb(1.0, 1.0, 1.0);
+    }
+
+    let cur_lum = get_luminance(col);
+
+    let (mut low, mut high) = if cur_lum > lum {
+        (Color::from_rgb(0.0, 0.0, 0.0), col.clone())
+    } else {
+        (col.clone(), Color::from_rgb(1.0, 1.0, 1.0))
+    };
+
+    for i in 1..=30 {
+        let mid = low.interpolate_rgb(&high, 0.5);
+        let lm = get_luminance(&mid);
+
+        if (lum - lm).abs() < f64::EPSILON || i == 30 {
+            return mid;
+        }
+
+        if lm > lum {
+            high = mid;
+        } else {
+            low = mid;
+        }
+    }
+
+    col.clone()
 }
 
 #[cfg(test)]
