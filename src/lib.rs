@@ -1,4 +1,3 @@
-#![warn(clippy::pedantic, clippy::nursery)]
 #![allow(clippy::cast_precision_loss)]
 
 mod rainbow;

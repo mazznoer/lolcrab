@@ -1,5 +1,10 @@
 use crate::Rainbow;
 use clap::{ArgEnum, Clap};
+use colorgrad::{Color, ParseColorError};
+
+fn parse_color(s: &str) -> Result<Color, ParseColorError> {
+    s.parse::<Color>()
+}
 
 #[derive(Debug, ArgEnum)]
 pub enum Gradient {
@@ -24,6 +29,10 @@ pub struct RainbowCmd {
     #[clap(short, long, arg_enum, default_value = "rainbow", value_name = "NAME")]
     gradient: Gradient,
 
+    /// Create custom gradient using the specified colors
+    #[clap(short = 'c', long, parse(try_from_str = parse_color), value_name = "COLOR")]
+    custom: Option<Vec<Color>>,
+
     /// Sets noise scale. Try value between 0.01 .. 0.2
     #[clap(short, long, default_value = "0.034", value_name = "FLOAT")]
     scale: f64,
@@ -39,20 +48,29 @@ pub struct RainbowCmd {
 
 impl From<RainbowCmd> for Rainbow {
     fn from(cmd: RainbowCmd) -> Self {
-        let grad = match cmd.gradient {
-            Gradient::Cividis => colorgrad::cividis(),
-            Gradient::Cool => colorgrad::cool(),
-            Gradient::Cubehelix => colorgrad::cubehelix_default(),
-            Gradient::Inferno => colorgrad::inferno(),
-            Gradient::Magma => colorgrad::magma(),
-            Gradient::Plasma => colorgrad::plasma(),
-            Gradient::Rainbow => colorgrad::rainbow(),
-            Gradient::RdYlGn => colorgrad::rd_yl_gn(),
-            Gradient::Sinebow => colorgrad::sinebow(),
-            Gradient::Spectral => colorgrad::spectral(),
-            Gradient::Turbo => colorgrad::turbo(),
-            Gradient::Viridis => colorgrad::viridis(),
-            Gradient::Warm => colorgrad::warm(),
+        let grad = if let Some(colors) = cmd.custom {
+            colorgrad::CustomGradient::new()
+                .colors(&colors)
+                .mode(colorgrad::BlendMode::Oklab)
+                .interpolation(colorgrad::Interpolation::CatmullRom)
+                .build()
+                .unwrap()
+        } else {
+            match cmd.gradient {
+                Gradient::Cividis => colorgrad::cividis(),
+                Gradient::Cool => colorgrad::cool(),
+                Gradient::Cubehelix => colorgrad::cubehelix_default(),
+                Gradient::Inferno => colorgrad::inferno(),
+                Gradient::Magma => colorgrad::magma(),
+                Gradient::Plasma => colorgrad::plasma(),
+                Gradient::Rainbow => colorgrad::rainbow(),
+                Gradient::RdYlGn => colorgrad::rd_yl_gn(),
+                Gradient::Sinebow => colorgrad::sinebow(),
+                Gradient::Spectral => colorgrad::spectral(),
+                Gradient::Turbo => colorgrad::turbo(),
+                Gradient::Viridis => colorgrad::viridis(),
+                Gradient::Warm => colorgrad::warm(),
+            }
         };
 
         Self::new(grad, cmd.seed, cmd.scale, cmd.invert)
