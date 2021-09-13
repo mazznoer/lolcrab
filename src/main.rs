@@ -1,7 +1,7 @@
 #![warn(clippy::pedantic, clippy::nursery)]
 
 use clap::Clap;
-use lcat::{Rainbow, RainbowCmd};
+use lolcrab::{Rainbow, RainbowCmd};
 use std::{
     fs::File,
     io::{self, BufReader},
@@ -13,7 +13,7 @@ use std::{
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 #[derive(Clap)]
-#[clap(name = "lcat", about = "Terminal rainbows.")]
+#[clap(name = "lolcrab", version, about)]
 pub struct Cmdline {
     #[clap(name = "File", default_value = "-", parse(from_os_str))]
     files: Vec<PathBuf>,

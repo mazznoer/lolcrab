@@ -1,22 +1,31 @@
 [package]
-name = "lcat"
-version = "0.7.3"
-authors = ["David Knaack <davidkna@users.noreply.github.com>"]
+name = "lolcrab"
+version = "0.1.0"
+authors = ["David Knaack <davidkna@users.noreply.github.com>", "Nor Khasyatillah <mazznoer@ymail.com>"]
 edition = "2018"
-description = "Another lolcat in rust! Full unicode support, escapes for ANSI escape sequences, hue shift in Cubehelix."
+description = "Like lolcat but with noise and more colorful."
+keywords = ["lolcat", "rainbow"]
+categories = ["command-line-utilities"]
 readme = "README.md"
-repository = "https://github.com/davidkna/lcat-rs"
-documentation = "https://docs.rs/lcat/"
+repository = "https://github.com/mazznoer/lolcrab"
+documentation = "https://docs.rs/lolcrab/"
 license = "MIT OR Apache-2.0"
+exclude = [
+	".github/*",
+	".gitignore",
+	"docs/*",
+	"test_data/*",
+]
 
 [features]
 default = ["clap"]
 
 [dependencies]
 bstr = "0.2.16"
-clap = { version = "3.0.0-beta.4", optional = true }
+clap = { version = "= 3.0.0-beta.4", optional = true }
 colorgrad = "0.5.0"
 fastrand = "1.5.0"
+noise = { version = "0.7.0", default-features = false }
 unicode-segmentation = "1.8.0"
 unicode-width = "0.1.8"
 

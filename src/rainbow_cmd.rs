@@ -2,67 +2,59 @@ use crate::Rainbow;
 use clap::{ArgEnum, Clap};
 
 #[derive(Debug, ArgEnum)]
-pub enum RainbowStyle {
+pub enum Gradient {
+    Cividis,
+    Cool,
+    Cubehelix,
+    Inferno,
+    Magma,
+    Plasma,
     Rainbow,
+    RdYlGn,
     Sinebow,
+    Spectral,
+    Turbo,
+    Viridis,
+    Warm,
 }
 
 #[derive(Debug, Clap)]
 pub struct RainbowCmd {
-    ///  How many degrees to shift text color hue for every column
-    #[clap(short = 'C', long, default_value = "1.6")]
-    shift_col: f64,
+    /// Sets color gradient
+    #[clap(short, long, arg_enum, default_value = "rainbow", value_name = "NAME")]
+    gradient: Gradient,
 
-    /// How many degrees to shift text color hue for every row
-    #[clap(short = 'R', long, default_value = "3.2")]
-    shift_row: f64,
-
-    /// Don't randomize sign of col and row shift values
-    #[clap(short = 'n', long)]
-    shift_sign_no_random: bool,
-
-    /// Sets initial hue of text color in degress [default: random]
-    #[clap(short = 'H', long)]
-    hue: Option<f64>,
-
-    /// Rainbow mode
-    #[clap(short, long, arg_enum, default_value = "rainbow")]
-    style: RainbowStyle,
+    /// Sets noise scale. Try value between 0.01 .. 0.2
+    #[clap(short, long, default_value = "0.034", value_name = "FLOAT")]
+    scale: f64,
 
     /// Sets seed [default: random]
-    #[clap(short = 'S', long)]
+    #[clap(short = 'S', long, value_name = "NUM")]
     seed: Option<u64>,
 
-    /// Invert background and foreground
+    /// Colorize the background
     #[clap(short = 'i', long)]
     invert: bool,
 }
 
 impl From<RainbowCmd> for Rainbow {
     fn from(cmd: RainbowCmd) -> Self {
-        if let Some(seed) = cmd.seed {
-            fastrand::seed(seed);
-        }
-
-        let shift_col = if cmd.shift_sign_no_random || fastrand::bool() {
-            cmd.shift_col
-        } else {
-            -cmd.shift_col
-        } / 360.;
-
-        let shift_row = if cmd.shift_sign_no_random || fastrand::bool() {
-            cmd.shift_row
-        } else {
-            -cmd.shift_row
-        } / 360.;
-
-        let start = cmd.hue.map_or_else(fastrand::f64, |hue| hue / 360.);
-
-        let grad = match cmd.style {
-            RainbowStyle::Rainbow => colorgrad::rainbow(),
-            RainbowStyle::Sinebow => colorgrad::sinebow(),
+        let grad = match cmd.gradient {
+            Gradient::Cividis => colorgrad::cividis(),
+            Gradient::Cool => colorgrad::cool(),
+            Gradient::Cubehelix => colorgrad::cubehelix_default(),
+            Gradient::Inferno => colorgrad::inferno(),
+            Gradient::Magma => colorgrad::magma(),
+            Gradient::Plasma => colorgrad::plasma(),
+            Gradient::Rainbow => colorgrad::rainbow(),
+            Gradient::RdYlGn => colorgrad::rd_yl_gn(),
+            Gradient::Sinebow => colorgrad::sinebow(),
+            Gradient::Spectral => colorgrad::spectral(),
+            Gradient::Turbo => colorgrad::turbo(),
+            Gradient::Viridis => colorgrad::viridis(),
+            Gradient::Warm => colorgrad::warm(),
         };
 
-        Self::new(grad, start, shift_col, shift_row, cmd.invert)
+        Self::new(grad, cmd.seed, cmd.scale, cmd.invert)
     }
 }

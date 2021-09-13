@@ -1,4 +1,5 @@
 use bstr::{io::BufReadExt, ByteSlice};
+use noise::{NoiseFn, Seedable};
 use std::io::{prelude::*, Write};
 use unicode_segmentation::UnicodeSegmentation;
 use unicode_width::UnicodeWidthChar;
@@ -6,59 +7,52 @@ use unicode_width::UnicodeWidthChar;
 pub struct Rainbow {
     current_row: usize,
     current_col: usize,
-    shift_col: f64,
-    shift_row: f64,
-    position: f64,
     gradient: colorgrad::Gradient,
+    noise: noise::OpenSimplex,
+    noise_scale: f64,
     invert: bool,
 }
 
 impl Rainbow {
     #[must_use]
-    pub const fn new(
+    pub fn new(
         gradient: colorgrad::Gradient,
-        start: f64,
-        shift_col: f64,
-        shift_row: f64,
+        seed: Option<u64>,
+        noise_scale: f64,
         invert: bool,
     ) -> Self {
+        if let Some(seed) = seed {
+            fastrand::seed(seed);
+        }
+
         Self {
             gradient,
-            shift_col,
-            shift_row,
-            position: start,
+            noise: noise::OpenSimplex::new().set_seed(fastrand::u32(..)),
             current_row: 0,
             current_col: 0,
+            noise_scale,
             invert,
         }
     }
 
     pub fn step_row(&mut self, n_row: usize) {
         self.current_row += n_row;
-        self.position += n_row as f64 * self.shift_row;
     }
 
     pub fn step_col(&mut self, n_col: usize) {
         self.current_col += n_col;
-        self.position += n_col as f64 * self.shift_col;
-    }
-
-    pub fn reset_row(&mut self) {
-        self.position -= self.current_row as f64 * self.shift_row;
-        self.current_row = 0;
     }
 
     pub fn reset_col(&mut self) {
-        self.position -= self.current_col as f64 * self.shift_col;
         self.current_col = 0;
     }
 
     fn get_position(&mut self) -> f64 {
-        if self.position < 0.0 || self.position > 1.0 {
-            self.position -= self.position.floor();
-        }
-
-        self.position
+        let t = self.noise.get([
+            self.current_col as f64 * self.noise_scale,
+            self.current_row as f64 * self.noise_scale * 2.0,
+        ]);
+        remap(t, -0.5, 0.5, 0.0, 1.0)
     }
 
     pub fn get_color(&mut self) -> (u8, u8, u8) {
@@ -161,12 +155,17 @@ impl Rainbow {
     }
 }
 
+// Map value which is in range [a, b] to range [c, d]
+fn remap(value: f64, a: f64, b: f64, c: f64, d: f64) -> f64 {
+    (value - a) * ((d - c) / (b - a)) + c
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     fn create_rb() -> Rainbow {
-        Rainbow::new(colorgrad::rainbow(), 0.0, 0.1, 0.2, false)
+        Rainbow::new(colorgrad::rainbow(), Some(0), 0.03, false)
     }
 
     #[test]
@@ -207,15 +206,6 @@ mod tests {
             .unwrap();
         let mut rb_b = create_rb();
         rb_b.step_row(1);
-        assert_eq!(rb_a.get_color(), rb_b.get_color(),);
-    }
-
-    #[test]
-    fn test_reset_row() {
-        let mut rb_a = create_rb();
-        let mut rb_b = create_rb();
-        rb_a.step_row(20);
-        rb_a.reset_row();
         assert_eq!(rb_a.get_color(), rb_b.get_color(),);
     }
 
