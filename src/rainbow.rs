@@ -49,11 +49,10 @@ impl Rainbow {
     }
 
     fn get_position(&mut self) -> f64 {
-        let t = self.noise.get([
+        self.noise.get([
             self.current_col as f64 * self.noise_scale,
             self.current_row as f64 * self.noise_scale * 2.0,
-        ]);
-        remap(t, -0.5, 0.5, 0.0, 1.0)
+        ]) + 0.5
     }
 
     pub fn get_color(&mut self) -> Color {
@@ -178,11 +177,6 @@ impl Rainbow {
             Ok(true)
         })
     }
-}
-
-// Map value which is in range [a, b] to range [c, d]
-fn remap(value: f64, a: f64, b: f64, c: f64, d: f64) -> f64 {
-    (value - a) * ((d - c) / (b - a)) + c
 }
 
 fn get_luminance(col: &Color) -> f64 {
