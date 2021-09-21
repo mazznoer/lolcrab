@@ -14,6 +14,7 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 #[derive(Clap)]
 #[clap(name = "lolcrab", version, about)]
+#[clap(setting = clap::AppSettings::ColoredHelp)]
 pub struct Cmdline {
     #[clap(name = "File", default_value = "-", parse(from_os_str))]
     files: Vec<PathBuf>,
