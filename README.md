@@ -2,7 +2,7 @@
 
 [![crates.io](https://img.shields.io/crates/v/lolcrab.svg)](https://crates.io/crates/lolcrab)
 
-Like `lolcat` but with noise and more colorful.
+Like [`lolcat`](https://github.com/busyloop/lolcat) but with [noise](https://en.wikipedia.org/wiki/OpenSimplex_noise) and more colorful.
 
 ![lolcrab](docs/images/lolcrab.png)
 
