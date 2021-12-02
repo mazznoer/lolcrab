@@ -1,6 +1,6 @@
 #![warn(clippy::pedantic, clippy::nursery)]
 
-use clap::Clap;
+use clap::Parser;
 use lolcrab::{Rainbow, RainbowCmd};
 use std::{
     fs::File,
@@ -12,9 +12,8 @@ use std::{
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-#[derive(Clap)]
+#[derive(Parser)]
 #[clap(name = "lolcrab", version, about)]
-#[clap(setting = clap::AppSettings::ColoredHelp)]
 pub struct Cmdline {
     #[clap(name = "File", default_value = "-", parse(from_os_str))]
     files: Vec<PathBuf>,

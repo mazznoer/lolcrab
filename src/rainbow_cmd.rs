@@ -1,12 +1,12 @@
 use crate::Rainbow;
-use clap::{ArgEnum, Clap};
+use clap::{ArgEnum, Parser};
 use colorgrad::{Color, ParseColorError};
 
 fn parse_color(s: &str) -> Result<Color, ParseColorError> {
     s.parse::<Color>()
 }
 
-#[derive(Debug, ArgEnum)]
+#[derive(Debug, Clone, ArgEnum)]
 pub enum Gradient {
     Cividis,
     Cool,
@@ -23,7 +23,7 @@ pub enum Gradient {
     Warm,
 }
 
-#[derive(Debug, Clap)]
+#[derive(Debug, Parser)]
 pub struct RainbowCmd {
     /// Sets color gradient
     #[clap(short, long, arg_enum, default_value = "rainbow", value_name = "NAME")]
