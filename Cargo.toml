@@ -1,6 +1,6 @@
 [package]
 name = "lolcrab"
-version = "0.1.4"
+version = "0.2.0"
 authors = ["David Knaack <davidkna@users.noreply.github.com>", "Nor Khasyatillah <mazznoer@ymail.com>"]
 edition = "2018"
 description = "Like lolcat but with noise and more colorful."
@@ -22,7 +22,7 @@ default = ["clap"]
 
 [dependencies]
 bstr = "0.2.17"
-clap = { version = "= 3.1.17", features = ["derive"], optional = true }
+clap = { version = "= 3.1.18", features = ["derive"], optional = true }
 colorgrad = "0.5.0"
 fastrand = "1.7.0"
 noise = { version = "0.7.0", default-features = false }
