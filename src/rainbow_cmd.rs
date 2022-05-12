@@ -30,7 +30,7 @@ pub struct RainbowCmd {
     gradient: Gradient,
 
     /// Create custom gradient using the specified colors
-    #[clap(short = 'c', long, parse(try_from_str = parse_color), value_name = "COLOR")]
+    #[clap(short = 'c', long, parse(try_from_str = parse_color), multiple_values = true, value_name = "COLOR")]
     custom: Option<Vec<Color>>,
 
     /// Sharp gradient
