@@ -64,23 +64,13 @@ impl Rainbow {
             return Ok(true);
         }
 
-        if grapheme == "\r\n" {
+        if grapheme == "\n" || grapheme == "\r\n" {
             self.reset_col();
             self.step_row(1);
             if self.invert {
                 out.write_all(b"\x1B[49m")?;
             }
-            out.write_all(b"\r\n")?;
-            return Ok(false);
-        }
-
-        if grapheme == "\n" {
-            self.reset_col();
-            self.step_row(1);
-            if self.invert {
-                out.write_all(b"\x1B[49m")?;
-            }
-            out.write_all(b"\n")?;
+            out.write_all(grapheme.as_bytes())?;
             return Ok(false);
         }
 
