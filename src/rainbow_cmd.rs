@@ -11,6 +11,7 @@ pub enum Gradient {
     Cividis,
     Cool,
     Cubehelix,
+    Fruits,
     Inferno,
     Magma,
     Plasma,
@@ -106,6 +107,9 @@ impl From<RainbowCmd> for Rainbow {
                 Gradient::Turbo => colorgrad::turbo(),
                 Gradient::Viridis => colorgrad::viridis(),
                 Gradient::Warm => colorgrad::warm(),
+                Gradient::Fruits => build_gradient(&[
+                    "#00c21c", "#009dc9", "#ffd43e", "#ff2a70", "#b971ff", "#7ce300", "#feff62",
+                ]),
             }
         };
 
@@ -121,4 +125,13 @@ impl From<RainbowCmd> for Rainbow {
 
         Self::new(grad, cmd.scale, cmd.invert)
     }
+}
+
+fn build_gradient(colors: &[&str]) -> colorgrad::Gradient {
+    colorgrad::CustomGradient::new()
+        .html_colors(colors)
+        .mode(colorgrad::BlendMode::Oklab)
+        .interpolation(colorgrad::Interpolation::CatmullRom)
+        .build()
+        .unwrap()
 }
