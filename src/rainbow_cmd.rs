@@ -23,6 +23,21 @@ pub enum Gradient {
     Warm,
 }
 
+fn random_colors_validator(s: &str) -> Result<(), String> {
+    match s.parse::<u8>() {
+        Ok(t) if (1..=100).contains(&t) => Ok(()),
+        _ => Err(String::from("Valid value is 1 to 100")),
+    }
+}
+
+fn random_color() -> Color {
+    if fastrand::bool() {
+        Color::from_hwb(fastrand::f64() * 360.0, fastrand::f64() * 0.5, 0.0)
+    } else {
+        Color::from_hwb(fastrand::f64() * 360.0, 0.0, fastrand::f64() * 0.3)
+    }
+}
+
 #[derive(Debug, Parser)]
 pub struct RainbowCmd {
     /// Sets color gradient
@@ -48,11 +63,28 @@ pub struct RainbowCmd {
     /// Colorize the background
     #[clap(short = 'i', long)]
     invert: bool,
+
+    /// Use random colors as custom gradient [1 .. 100]
+    #[clap(short = 'r', long, value_name = "NUM", validator = random_colors_validator)]
+    random_colors: Option<u8>,
 }
 
 impl From<RainbowCmd> for Rainbow {
     fn from(cmd: RainbowCmd) -> Self {
+        if let Some(seed) = cmd.seed {
+            fastrand::seed(seed);
+        }
+
         let grad = if let Some(colors) = cmd.custom {
+            colorgrad::CustomGradient::new()
+                .colors(&colors)
+                .mode(colorgrad::BlendMode::Oklab)
+                .interpolation(colorgrad::Interpolation::CatmullRom)
+                .build()
+                .unwrap()
+        } else if cmd.random_colors.is_some() {
+            let n = cmd.random_colors.unwrap();
+            let colors = (0..n).map(|_| random_color()).collect::<Vec<_>>();
             colorgrad::CustomGradient::new()
                 .colors(&colors)
                 .mode(colorgrad::BlendMode::Oklab)
@@ -87,6 +119,6 @@ impl From<RainbowCmd> for Rainbow {
             grad
         };
 
-        Self::new(grad, cmd.seed, cmd.scale, cmd.invert)
+        Self::new(grad, cmd.scale, cmd.invert)
     }
 }

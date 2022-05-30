@@ -16,16 +16,7 @@ pub struct Rainbow {
 
 impl Rainbow {
     #[must_use]
-    pub fn new(
-        gradient: colorgrad::Gradient,
-        seed: Option<u64>,
-        noise_scale: f64,
-        invert: bool,
-    ) -> Self {
-        if let Some(seed) = seed {
-            fastrand::seed(seed);
-        }
-
+    pub fn new(gradient: colorgrad::Gradient, noise_scale: f64, invert: bool) -> Self {
         Self {
             gradient,
             noise: noise::OpenSimplex::new().set_seed(fastrand::u32(..)),
@@ -226,7 +217,8 @@ mod tests {
     use super::*;
 
     fn create_rb() -> Rainbow {
-        Rainbow::new(colorgrad::rainbow(), Some(0), 0.03, false)
+        fastrand::seed(0);
+        Rainbow::new(colorgrad::rainbow(), 0.03, false)
     }
 
     #[test]
