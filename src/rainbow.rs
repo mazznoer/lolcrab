@@ -161,8 +161,18 @@ impl Rainbow {
 }
 
 fn get_luminance(col: &Color) -> f64 {
+    // http://www.w3.org/TR/2008/REC-WCAG20-20081211/#relativeluminancedef
+
+    fn lum(t: f64) -> f64 {
+        if t <= 0.03928 {
+            t / 12.92
+        } else {
+            ((t + 0.055) / 1.055).powf(2.4)
+        }
+    }
+
     let (r, g, b, _) = col.rgba();
-    0.299 * r + 0.587 * g + 0.114 * b
+    0.2126 * lum(r) + 0.7152 * lum(g) + 0.0722 * lum(b)
 }
 
 fn set_luminance(col: &Color, lum: f64) -> Color {
