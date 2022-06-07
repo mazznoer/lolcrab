@@ -87,10 +87,16 @@ impl Rainbow {
             if self.invert {
                 let lum = get_luminance(&col);
 
-                let fg = if lum < 0.2 {
-                    set_luminance(&col, lum + 0.25)
+                let fg = if lum < 0.5 {
+                    blend(
+                        &Color::from_rgba(1.0, 1.0, 1.0, remap(lum, 0.0, 0.5, 0.35, 0.85)),
+                        &col,
+                    )
                 } else {
-                    set_luminance(&col, lum - 0.35)
+                    blend(
+                        &Color::from_rgba(0.0, 0.0, 0.0, remap(lum, 0.5, 1.0, 0.40, 0.35)),
+                        &col,
+                    )
                 }
                 .rgba_u8();
 
@@ -175,41 +181,19 @@ fn get_luminance(col: &Color) -> f64 {
     0.2126 * lum(r) + 0.7152 * lum(g) + 0.0722 * lum(b)
 }
 
-fn set_luminance(col: &Color, lum: f64) -> Color {
-    // https://github.com/gka/chroma.js/blob/master/src/ops/luminance.js
+fn blend(color: &Color, bg: &Color) -> Color {
+    let (r, g, b, a) = color.rgba();
+    let bg = bg.rgba();
+    Color::from_rgb(
+        ((1.0 - a) * bg.0) + (a * r),
+        ((1.0 - a) * bg.1) + (a * g),
+        ((1.0 - a) * bg.2) + (a * b),
+    )
+}
 
-    if lum <= 0.0 {
-        return Color::from_rgb(0.0, 0.0, 0.0);
-    }
-
-    if lum >= 1.0 {
-        return Color::from_rgb(1.0, 1.0, 1.0);
-    }
-
-    let cur_lum = get_luminance(col);
-
-    let (mut low, mut high) = if cur_lum > lum {
-        (Color::from_rgb(0.0, 0.0, 0.0), col.clone())
-    } else {
-        (col.clone(), Color::from_rgb(1.0, 1.0, 1.0))
-    };
-
-    for i in 1..=30 {
-        let mid = low.interpolate_rgb(&high, 0.5);
-        let lm = get_luminance(&mid);
-
-        if (lum - lm).abs() < f64::EPSILON || i == 30 {
-            return mid;
-        }
-
-        if lm > lum {
-            high = mid;
-        } else {
-            low = mid;
-        }
-    }
-
-    col.clone()
+// Map t from range [a, b] to range [c, d]
+fn remap(t: f64, a: f64, b: f64, c: f64, d: f64) -> f64 {
+    (t - a) * ((d - c) / (b - a)) + c
 }
 
 #[cfg(test)]
