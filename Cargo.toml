@@ -17,6 +17,10 @@ exclude = [
 	"test_data/*",
 ]
 
+[profile.release]
+lto = true
+strip = true
+
 [features]
 default = ["clap"]
 
