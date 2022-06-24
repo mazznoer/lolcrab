@@ -85,15 +85,15 @@ impl Rainbow {
             let (r, g, b, _) = col.rgba_u8();
 
             if self.invert {
-                let lum = get_luminance(&col);
+                let lum = color_luminance(&col);
 
                 let fg = if lum < 0.5 {
-                    blend(
+                    blend_color(
                         &Color::from_rgba(1.0, 1.0, 1.0, remap(lum, 0.0, 0.5, 0.35, 0.85)),
                         &col,
                     )
                 } else {
-                    blend(
+                    blend_color(
                         &Color::from_rgba(0.0, 0.0, 0.0, remap(lum, 0.5, 1.0, 0.40, 0.35)),
                         &col,
                     )
@@ -166,9 +166,8 @@ impl Rainbow {
     }
 }
 
-fn get_luminance(col: &Color) -> f64 {
-    // http://www.w3.org/TR/2008/REC-WCAG20-20081211/#relativeluminancedef
-
+// Reference http://www.w3.org/TR/2008/REC-WCAG20-20081211/#relativeluminancedef
+fn color_luminance(col: &Color) -> f64 {
     fn lum(t: f64) -> f64 {
         if t <= 0.03928 {
             t / 12.92
@@ -177,17 +176,14 @@ fn get_luminance(col: &Color) -> f64 {
         }
     }
 
-    let (r, g, b, _) = col.rgba();
-    0.2126 * lum(r) + 0.7152 * lum(g) + 0.0722 * lum(b)
+    0.2126 * lum(col.r) + 0.7152 * lum(col.g) + 0.0722 * lum(col.b)
 }
 
-fn blend(color: &Color, bg: &Color) -> Color {
-    let (r, g, b, a) = color.rgba();
-    let bg = bg.rgba();
+fn blend_color(fg: &Color, bg: &Color) -> Color {
     Color::from_rgb(
-        ((1.0 - a) * bg.0) + (a * r),
-        ((1.0 - a) * bg.1) + (a * g),
-        ((1.0 - a) * bg.2) + (a * b),
+        ((1.0 - fg.a) * bg.r) + (fg.a * fg.r),
+        ((1.0 - fg.a) * bg.g) + (fg.a * fg.g),
+        ((1.0 - fg.a) * bg.b) + (fg.a * fg.b),
     )
 }
 
