@@ -1,22 +1,34 @@
+use std::io::{prelude::*, Write};
+use std::{thread, time};
+
 use bstr::{io::BufReadExt, ByteSlice};
 use colorgrad::Color;
 use noise::{NoiseFn, Seedable};
-use std::io::{prelude::*, Write};
 use unicode_segmentation::UnicodeSegmentation;
 use unicode_width::UnicodeWidthChar;
 
 pub struct Rainbow {
-    current_row: usize,
-    current_col: usize,
+    current_row: isize,
+    current_col: isize,
     gradient: colorgrad::Gradient,
     noise: noise::OpenSimplex,
     noise_scale: f64,
     invert: bool,
+    animate: bool,
+    duration: usize,
+    sleep_duration: time::Duration,
 }
 
 impl Rainbow {
     #[must_use]
-    pub fn new(gradient: colorgrad::Gradient, noise_scale: f64, invert: bool) -> Self {
+    pub fn new(
+        gradient: colorgrad::Gradient,
+        noise_scale: f64,
+        invert: bool,
+        animate: bool,
+        duration: usize,
+        speed: u8,
+    ) -> Self {
         Self {
             gradient,
             noise: noise::OpenSimplex::new().set_seed(fastrand::u32(..)),
@@ -24,14 +36,17 @@ impl Rainbow {
             current_col: 0,
             noise_scale,
             invert,
+            animate,
+            duration: duration.clamp(1, 30),
+            sleep_duration: time::Duration::from_millis(speed.clamp(30, 200) as u64),
         }
     }
 
-    pub fn step_row(&mut self, n_row: usize) {
+    pub fn step_row(&mut self, n_row: isize) {
         self.current_row += n_row;
     }
 
-    pub fn step_col(&mut self, n_col: usize) {
+    pub fn step_col(&mut self, n_col: isize) {
         self.current_col += n_col;
     }
 
@@ -113,10 +128,31 @@ impl Rainbow {
                     .chars()
                     .next()
                     .and_then(UnicodeWidthChar::width)
-                    .unwrap_or(0),
+                    .unwrap_or(0) as isize,
             );
         }
         Ok(escaping)
+    }
+
+    fn colorize_anim(&mut self, text: &[u8], out: &mut impl Write) -> std::io::Result<()> {
+        let mut text_len = 0;
+        for g in text.graphemes() {
+            text_len += g
+                .chars()
+                .next()
+                .and_then(UnicodeWidthChar::width)
+                .unwrap_or(0);
+        }
+        self.current_col = -(self.duration as isize - 1) * text_len as isize;
+        for _ in 0..self.duration {
+            write!(out, "\x1B[{}D", text.len())?;
+            self.colorize(text, out)?;
+            thread::sleep(self.sleep_duration);
+        }
+        writeln!(out)?;
+        self.reset_col();
+        self.step_row(1);
+        out.flush()
     }
 
     /// # Errors
@@ -154,11 +190,34 @@ impl Rainbow {
     /// # Errors
     ///
     /// Will return `Err` if `input` or `out` cause I/O errors
+    fn colorize_read_anim(
+        &mut self,
+        input: &mut impl BufRead,
+        out: &mut impl Write,
+    ) -> std::io::Result<()> {
+        out.write_all(b"\x1B[?25l")?;
+
+        input.for_byte_line(|line| {
+            self.colorize_anim(line, out)?;
+            Ok(true)
+        })?;
+
+        out.write_all(b"\x1B[?25h")?;
+        Ok(())
+    }
+
+    /// # Errors
+    ///
+    /// Will return `Err` if `input` or `out` cause I/O errors
     pub fn colorize_read(
         &mut self,
         input: &mut impl BufRead,
         out: &mut impl Write,
     ) -> std::io::Result<()> {
+        if self.animate {
+            return self.colorize_read_anim(input, out);
+        }
+
         input.for_byte_line_with_terminator(|line| {
             self.colorize(line, out)?;
             Ok(true)
@@ -198,7 +257,7 @@ mod tests {
 
     fn create_rb() -> Rainbow {
         fastrand::seed(0);
-        Rainbow::new(colorgrad::rainbow(), 0.03, false)
+        Rainbow::new(colorgrad::rainbow(), 0.03, false, false, 0, 0)
     }
 
     #[test]

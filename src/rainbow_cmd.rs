@@ -1,6 +1,7 @@
-use crate::Rainbow;
 use clap::{ArgEnum, Parser};
 use colorgrad::{Color, ParseColorError};
+
+use crate::Rainbow;
 
 fn parse_color(s: &str) -> Result<Color, ParseColorError> {
     s.parse::<Color>()
@@ -68,6 +69,18 @@ pub struct RainbowCmd {
     /// Use random colors as custom gradient [1 .. 100]
     #[clap(short = 'r', long, value_name = "NUM", validator = random_colors_validator)]
     random_colors: Option<u8>,
+
+    /// Enable animation mode
+    #[clap(short = 'a', long)]
+    animate: bool,
+
+    /// Animation duration
+    #[clap(short = 'd', long, value_name = "NUM")]
+    duration: Option<u8>,
+
+    /// Animation speed
+    #[clap(long)]
+    speed: Option<u8>,
 }
 
 impl From<RainbowCmd> for Rainbow {
@@ -123,7 +136,9 @@ impl From<RainbowCmd> for Rainbow {
             grad
         };
 
-        Self::new(grad, cmd.scale, cmd.invert)
+        let duration = cmd.duration.unwrap_or(5) as usize;
+        let speed = cmd.speed.unwrap_or(150);
+        Self::new(grad, cmd.scale, cmd.invert, cmd.animate, duration, speed)
     }
 }
 
