@@ -5,14 +5,13 @@ authors = ["David Knaack <davidkna@users.noreply.github.com>", "Nor Khasyatillah
 edition = "2018"
 description = "Like lolcat but with noise and more colorful."
 keywords = ["lolcat", "rainbow"]
-categories = ["command-line-utilities"]
+categories = ["command-line-interface", "command-line-utilities", "games"]
 readme = "README.md"
 repository = "https://github.com/mazznoer/lolcrab"
 documentation = "https://docs.rs/lolcrab/"
 license = "MIT OR Apache-2.0"
 exclude = [
 	".github/*",
-	".gitignore",
 	"docs/*",
 	"test_data/*",
 ]
@@ -26,8 +25,8 @@ default = ["clap"]
 
 [dependencies]
 bstr = "0.2.17"
-clap = { version = "= 3.1.18", features = ["derive"], optional = true }
-colorgrad = "0.6.0"
+clap = { version = "= 3.2.14", features = ["derive"], optional = true }
+colorgrad = "0.6.1"
 fastrand = "1.7.0"
 noise = { version = "0.7.0", default-features = false }
 unicode-segmentation = "1.9.0"
