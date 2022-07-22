@@ -97,28 +97,28 @@ impl Rainbow {
             };
         } else {
             let col = self.get_color();
-            let (r, g, b, _) = col.rgba_u8();
+            let [r, g, b, _] = col.to_rgba8();
 
             if self.invert {
                 let lum = color_luminance(&col);
 
                 let fg = if lum < 0.5 {
                     blend_color(
-                        &Color::from_rgba(1.0, 1.0, 1.0, remap(lum, 0.0, 0.5, 0.35, 0.85)),
+                        &Color::new(1.0, 1.0, 1.0, remap(lum, 0.0, 0.5, 0.35, 0.85)),
                         &col,
                     )
                 } else {
                     blend_color(
-                        &Color::from_rgba(0.0, 0.0, 0.0, remap(lum, 0.5, 1.0, 0.40, 0.35)),
+                        &Color::new(0.0, 0.0, 0.0, remap(lum, 0.5, 1.0, 0.40, 0.35)),
                         &col,
                     )
                 }
-                .rgba_u8();
+                .to_rgba8();
 
                 write!(
                     out,
                     "\x1B[38;2;{};{};{};48;2;{};{};{}m{}",
-                    fg.0, fg.1, fg.2, r, g, b, grapheme
+                    fg[0], fg[1], fg[2], r, g, b, grapheme
                 )?;
             } else {
                 write!(out, "\x1B[38;2;{};{};{}m{}", r, g, b, grapheme)?;
@@ -239,10 +239,11 @@ fn color_luminance(col: &Color) -> f64 {
 }
 
 fn blend_color(fg: &Color, bg: &Color) -> Color {
-    Color::from_rgb(
+    Color::new(
         ((1.0 - fg.a) * bg.r) + (fg.a * fg.r),
         ((1.0 - fg.a) * bg.g) + (fg.a * fg.g),
         ((1.0 - fg.a) * bg.b) + (fg.a * fg.b),
+        1.0,
     )
 }
 

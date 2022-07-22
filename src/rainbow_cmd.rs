@@ -34,9 +34,9 @@ fn random_colors_validator(s: &str) -> Result<(), String> {
 
 fn random_color() -> Color {
     if fastrand::bool() {
-        Color::from_hwb(fastrand::f64() * 360.0, fastrand::f64() * 0.5, 0.0)
+        Color::from_hwba(fastrand::f64() * 360.0, fastrand::f64() * 0.5, 0.0, 1.0)
     } else {
-        Color::from_hwb(fastrand::f64() * 360.0, 0.0, fastrand::f64() * 0.3)
+        Color::from_hwba(fastrand::f64() * 360.0, 0.0, fastrand::f64() * 0.3, 1.0)
     }
 }
 
