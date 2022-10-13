@@ -53,8 +53,8 @@ pub struct RainbowCmd {
     gradient: Gradient,
 
     /// Create custom gradient using the specified colors
-    #[arg(short = 'c', long, value_parser = parse_color, value_name = "COLOR")]
-    custom: Option<Vec<Color>>,
+    #[arg(short = 'c', long, value_parser = parse_color, num_args = 1.., value_name = "COLOR")]
+    custom: Vec<Color>,
 
     /// Sharp gradient
     #[arg(long, value_name = "NUM")]
@@ -73,7 +73,7 @@ pub struct RainbowCmd {
     invert: bool,
 
     /// Use random colors as custom gradient [1 .. 100]
-    #[arg(short = 'r', long, value_name = "NUM", value_parser = clap::value_parser!(u16).range(1..=100))]
+    #[arg(short = 'r', long, value_name = "NUM", value_parser = clap::value_parser!(u8).range(1..=100))]
     random_colors: Option<u8>,
 
     /// Enable animation mode
@@ -101,9 +101,9 @@ impl From<RainbowCmd> for Rainbow {
             fastrand::seed(seed);
         }
 
-        let grad = if let Some(colors) = cmd.custom {
+        let grad = if !cmd.custom.is_empty() {
             colorgrad::CustomGradient::new()
-                .colors(&colors)
+                .colors(&cmd.custom)
                 .mode(colorgrad::BlendMode::Oklab)
                 .interpolation(colorgrad::Interpolation::CatmullRom)
                 .build()
