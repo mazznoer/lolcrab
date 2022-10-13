@@ -1,4 +1,4 @@
-use clap::{ArgEnum, Parser};
+use clap::{Parser, ValueEnum};
 use colorgrad::{Color, ParseColorError};
 
 use crate::Rainbow;
@@ -7,7 +7,7 @@ fn parse_color(s: &str) -> Result<Color, ParseColorError> {
     s.parse::<Color>()
 }
 
-#[derive(Debug, Clone, ArgEnum)]
+#[derive(Debug, Clone, ValueEnum)]
 pub enum Gradient {
     Cividis,
     Cool,
@@ -25,12 +25,12 @@ pub enum Gradient {
     Warm,
 }
 
-fn random_colors_validator(s: &str) -> Result<(), String> {
+/*fn random_colors_validator(s: &str) -> Result<(), String> {
     match s.parse::<u8>() {
         Ok(t) if (1..=100).contains(&t) => Ok(()),
         _ => Err(String::from("Valid value is 1 to 100")),
     }
-}
+}*/
 
 fn random_color() -> Color {
     if fastrand::bool() {
@@ -43,44 +43,56 @@ fn random_color() -> Color {
 #[derive(Debug, Parser)]
 pub struct RainbowCmd {
     /// Sets color gradient
-    #[clap(short, long, arg_enum, default_value = "rainbow", value_name = "NAME")]
+    #[arg(
+        short,
+        long,
+        value_enum,
+        default_value = "rainbow",
+        value_name = "NAME"
+    )]
     gradient: Gradient,
 
     /// Create custom gradient using the specified colors
-    #[clap(short = 'c', long, parse(try_from_str = parse_color), multiple_values = true, value_name = "COLOR")]
+    #[arg(short = 'c', long, value_parser = parse_color, value_name = "COLOR")]
     custom: Option<Vec<Color>>,
 
     /// Sharp gradient
-    #[clap(long, value_name = "NUM")]
+    #[arg(long, value_name = "NUM")]
     sharp: Option<u8>,
 
     /// Sets noise scale. Try value between 0.01 .. 0.2
-    #[clap(short, long, default_value = "0.034", value_name = "FLOAT")]
+    #[arg(short, long, default_value = "0.034", value_name = "FLOAT")]
     scale: f64,
 
     /// Sets seed [default: random]
-    #[clap(short = 'S', long, value_name = "NUM")]
+    #[arg(short = 'S', long, value_name = "NUM")]
     seed: Option<u64>,
 
     /// Colorize the background
-    #[clap(short = 'i', long)]
+    #[arg(short = 'i', long)]
     invert: bool,
 
     /// Use random colors as custom gradient [1 .. 100]
-    #[clap(short = 'r', long, value_name = "NUM", validator = random_colors_validator)]
+    #[arg(short = 'r', long, value_name = "NUM", value_parser = clap::value_parser!(u16).range(1..=100))]
     random_colors: Option<u8>,
 
     /// Enable animation mode
-    #[clap(short = 'a', long)]
+    #[arg(short = 'a', long)]
     animate: bool,
 
     /// Animation duration
-    #[clap(short = 'd', long, value_name = "NUM")]
+    #[arg(short = 'd', long, value_name = "NUM")]
     duration: Option<u8>,
 
     /// Animation speed
-    #[clap(long)]
+    #[arg(long)]
     speed: Option<u8>,
+}
+
+#[test]
+fn verify_cli() {
+    use clap::CommandFactory;
+    RainbowCmd::command().debug_assert()
 }
 
 impl From<RainbowCmd> for Rainbow {

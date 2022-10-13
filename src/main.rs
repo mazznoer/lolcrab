@@ -15,7 +15,7 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 #[derive(Parser)]
 #[clap(name = "lolcrab", version, about)]
 pub struct Cmdline {
-    #[clap(name = "File", default_value = "-", parse(from_os_str))]
+    #[clap(name = "File", default_value = "-", value_parser = clap::value_parser!(PathBuf))]
     files: Vec<PathBuf>,
 
     #[clap(flatten)]

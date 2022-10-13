@@ -3,7 +3,7 @@ use std::{thread, time};
 
 use bstr::{io::BufReadExt, ByteSlice};
 use colorgrad::Color;
-use noise::{NoiseFn, Seedable};
+use noise::NoiseFn;
 use unicode_segmentation::UnicodeSegmentation;
 use unicode_width::UnicodeWidthChar;
 
@@ -31,7 +31,7 @@ impl Rainbow {
     ) -> Self {
         Self {
             gradient,
-            noise: noise::OpenSimplex::new().set_seed(fastrand::u32(..)),
+            noise: noise::OpenSimplex::new(fastrand::u32(..)),
             current_row: 0,
             current_col: 0,
             noise_scale,
