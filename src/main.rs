@@ -13,12 +13,12 @@ use std::{
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 #[derive(Parser)]
-#[clap(name = "lolcrab", version, about)]
+#[command(name = "lolcrab", version, about)]
 pub struct Cmdline {
-    #[clap(name = "File", default_value = "-", value_parser = clap::value_parser!(PathBuf))]
+    #[arg(name = "File", default_value = "-", value_parser = clap::value_parser!(PathBuf))]
     files: Vec<PathBuf>,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     rainbow: RainbowCmd,
 }
 

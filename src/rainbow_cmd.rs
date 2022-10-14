@@ -25,13 +25,6 @@ pub enum Gradient {
     Warm,
 }
 
-/*fn random_colors_validator(s: &str) -> Result<(), String> {
-    match s.parse::<u8>() {
-        Ok(t) if (1..=100).contains(&t) => Ok(()),
-        _ => Err(String::from("Valid value is 1 to 100")),
-    }
-}*/
-
 fn random_color() -> Color {
     if fastrand::bool() {
         Color::from_hwba(fastrand::f64() * 360.0, fastrand::f64() * 0.5, 0.0, 1.0)
@@ -54,7 +47,7 @@ pub struct RainbowCmd {
 
     /// Create custom gradient using the specified colors
     #[arg(short = 'c', long, value_parser = parse_color, num_args = 1.., value_name = "COLOR")]
-    custom: Vec<Color>,
+    custom: Option<Vec<Color>>,
 
     /// Sharp gradient
     #[arg(long, value_name = "NUM")]
@@ -101,9 +94,9 @@ impl From<RainbowCmd> for Rainbow {
             fastrand::seed(seed);
         }
 
-        let grad = if !cmd.custom.is_empty() {
+        let grad = if let Some(colors) = cmd.custom {
             colorgrad::CustomGradient::new()
-                .colors(&cmd.custom)
+                .colors(&colors)
                 .mode(colorgrad::BlendMode::Oklab)
                 .interpolation(colorgrad::Interpolation::CatmullRom)
                 .build()
