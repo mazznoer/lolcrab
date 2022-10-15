@@ -8,6 +8,10 @@ Like [`lolcat`](https://github.com/busyloop/lolcat) but with [noise](https://en.
 
 ## Installation
 
+Pre-compiled binaries for Linux, macOS and Windows is avaliable on [release page](https://github.com/mazznoer/lolcrab/releases).
+
+### Cargo
+
 `lolcrab` can be installed with [cargo](https://www.rust-lang.org/tools/install).
 
 ```shell
