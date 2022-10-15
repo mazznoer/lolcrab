@@ -21,23 +21,24 @@ cargo install lolcrab
 ## Usage
 
 ```text
-USAGE:
-    lolcrab [FLAGS] [OPTIONS] [--] [File]...
+Usage: lolcrab [OPTIONS] [File]...
 
-ARGS:
-    <File>...    [default: -]
+Arguments:
+  [File]...  [default: -]
 
-FLAGS:
-    -h, --help       Print help information
-    -i, --invert     Colorize the background
-    -V, --version    Print version information
-
-OPTIONS:
-    -c, --custom <COLOR>...    Create custom gradient using the specified colors
-    -g, --gradient <NAME>      Sets color gradient [default: rainbow] [possible values: cividis,
-                               cool, cubehelix, inferno, magma, plasma, rainbow, rd-yl-gn, sinebow,
-                               spectral, turbo, viridis, warm]
-    -s, --scale <FLOAT>        Sets noise scale. Try value between 0.01 .. 0.2 [default: 0.034]
-    -S, --seed <NUM>           Sets seed [default: random]
-        --sharp <NUM>          Sharp gradient
+Options:
+  -g, --gradient <NAME>      Sets color gradient [default: rainbow] [possible values: cividis, cool,
+                             cubehelix, fruits, inferno, magma, plasma, rainbow, rd-yl-gn, sinebow,
+                             spectral, turbo, viridis, warm]
+  -c, --custom <COLOR>...    Create custom gradient using the specified colors
+      --sharp <NUM>          Sharp gradient
+  -s, --scale <FLOAT>        Sets noise scale. Try value between 0.01 .. 0.2 [default: 0.034]
+  -S, --seed <NUM>           Sets seed [default: random]
+  -i, --invert               Colorize the background
+  -r, --random-colors <NUM>  Use random colors as custom gradient [1 .. 100]
+  -a, --animate              Enable animation mode
+  -d, --duration <NUM>       Animation duration
+      --speed <SPEED>        Animation speed
+  -h, --help                 Print help information
+  -V, --version              Print version information
 ```
