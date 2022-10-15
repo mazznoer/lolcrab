@@ -199,7 +199,7 @@ checksum = "d4d2456c373231a208ad294c33dc5bff30051eafd954cd4caae83a712b12854d"
 
 [[package]]
 name = "lolcrab"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "bstr",
  "clap",
