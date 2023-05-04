@@ -93,7 +93,7 @@ impl Rainbow {
             out.write_all(grapheme.as_bytes())?;
             escaping = grapheme.len() != 1 || {
                 let c = grapheme.as_bytes()[0];
-                !(b'a'..=b'z').contains(&c) && !(b'A'..=b'Z').contains(&c)
+                !c.is_ascii_lowercase() && !c.is_ascii_uppercase()
             };
         } else {
             let col = self.get_color();
