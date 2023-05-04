@@ -24,13 +24,13 @@ strip = true
 default = ["clap"]
 
 [dependencies]
-bstr = "1.0.1"
-clap = { version = "= 4.0.15", features = ["derive", "wrap_help"], optional = true }
+bstr = "1.4.0"
+clap = { version = "= 4.2.7", features = ["derive", "wrap_help"], optional = true }
 colorgrad = "0.6.2"
-fastrand = "1.7.0"
-noise = { version = "0.8.1", default-features = false }
-unicode-segmentation = "1.9.0"
-unicode-width = "0.1.9"
+fastrand = "1.9.0"
+noise = { version = "0.8.2", default-features = false }
+unicode-segmentation = "1.10.1"
+unicode-width = "0.1.10"
 
 # Allocator
-mimalloc = { version = "0.1.29", optional = true, default-features = false }
+mimalloc = { version = "0.1.37", optional = true, default-features = false }
