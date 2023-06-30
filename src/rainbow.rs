@@ -2,7 +2,7 @@ use std::io::{prelude::*, Write};
 use std::{thread, time};
 
 use bstr::{io::BufReadExt, ByteSlice};
-use colorgrad::Color;
+use colorgrad::{Color, Gradient};
 use noise::NoiseFn;
 use unicode_segmentation::UnicodeSegmentation;
 use unicode_width::UnicodeWidthChar;
@@ -10,7 +10,7 @@ use unicode_width::UnicodeWidthChar;
 pub struct Rainbow {
     current_row: isize,
     current_col: isize,
-    gradient: colorgrad::Gradient,
+    gradient: Box<dyn Gradient>,
     noise: noise::OpenSimplex,
     noise_scale: f64,
     invert: bool,
@@ -22,7 +22,7 @@ pub struct Rainbow {
 impl Rainbow {
     #[must_use]
     pub fn new(
-        gradient: colorgrad::Gradient,
+        gradient: Box<dyn Gradient>,
         noise_scale: f64,
         invert: bool,
         animate: bool,
@@ -63,7 +63,7 @@ impl Rainbow {
 
     pub fn get_color(&mut self) -> Color {
         let position = self.get_position();
-        self.gradient.at(position)
+        self.gradient.at(position as f32)
     }
 
     #[inline]
@@ -226,8 +226,8 @@ impl Rainbow {
 }
 
 // Reference http://www.w3.org/TR/2008/REC-WCAG20-20081211/#relativeluminancedef
-fn color_luminance(col: &Color) -> f64 {
-    fn lum(t: f64) -> f64 {
+fn color_luminance(col: &Color) -> f32 {
+    fn lum(t: f32) -> f32 {
         if t <= 0.03928 {
             t / 12.92
         } else {
@@ -248,7 +248,7 @@ fn blend_color(fg: &Color, bg: &Color) -> Color {
 }
 
 // Map t from range [a, b] to range [c, d]
-fn remap(t: f64, a: f64, b: f64, c: f64, d: f64) -> f64 {
+fn remap(t: f32, a: f32, b: f32, c: f32, d: f32) -> f32 {
     (t - a) * ((d - c) / (b - a)) + c
 }
 

@@ -27,9 +27,9 @@ pub enum Gradient {
 
 fn random_color() -> Color {
     if fastrand::bool() {
-        Color::from_hwba(fastrand::f64() * 360.0, fastrand::f64() * 0.5, 0.0, 1.0)
+        Color::from_hwba(fastrand::f32() * 360.0, fastrand::f32() * 0.5, 0.0, 1.0)
     } else {
-        Color::from_hwba(fastrand::f64() * 360.0, 0.0, fastrand::f64() * 0.3, 1.0)
+        Color::from_hwba(fastrand::f32() * 360.0, 0.0, fastrand::f32() * 0.3, 1.0)
     }
 }
 
@@ -94,37 +94,39 @@ impl From<RainbowCmd> for Rainbow {
             fastrand::seed(seed);
         }
 
-        let grad = if let Some(colors) = cmd.custom {
-            colorgrad::CustomGradient::new()
-                .colors(&colors)
-                .mode(colorgrad::BlendMode::Oklab)
-                .interpolation(colorgrad::Interpolation::CatmullRom)
-                .build()
-                .unwrap()
+        let grad: Box<dyn colorgrad::Gradient> = if let Some(colors) = cmd.custom {
+            Box::new(
+                colorgrad::GradientBuilder::new()
+                    .colors(&colors)
+                    .mode(colorgrad::BlendMode::Oklab)
+                    .build::<colorgrad::CatmullRomGradient>()
+                    .unwrap(),
+            )
         } else if cmd.random_colors.is_some() {
             let n = cmd.random_colors.unwrap();
             let colors = (0..n).map(|_| random_color()).collect::<Vec<_>>();
-            colorgrad::CustomGradient::new()
-                .colors(&colors)
-                .mode(colorgrad::BlendMode::Oklab)
-                .interpolation(colorgrad::Interpolation::CatmullRom)
-                .build()
-                .unwrap()
+            Box::new(
+                colorgrad::GradientBuilder::new()
+                    .colors(&colors)
+                    .mode(colorgrad::BlendMode::Oklab)
+                    .build::<colorgrad::CatmullRomGradient>()
+                    .unwrap(),
+            )
         } else {
             match cmd.gradient {
-                Gradient::Cividis => colorgrad::cividis(),
-                Gradient::Cool => colorgrad::cool(),
-                Gradient::Cubehelix => colorgrad::cubehelix_default(),
-                Gradient::Inferno => colorgrad::inferno(),
-                Gradient::Magma => colorgrad::magma(),
-                Gradient::Plasma => colorgrad::plasma(),
-                Gradient::Rainbow => colorgrad::rainbow(),
-                Gradient::RdYlGn => colorgrad::rd_yl_gn(),
-                Gradient::Sinebow => colorgrad::sinebow(),
-                Gradient::Spectral => colorgrad::spectral(),
-                Gradient::Turbo => colorgrad::turbo(),
-                Gradient::Viridis => colorgrad::viridis(),
-                Gradient::Warm => colorgrad::warm(),
+                Gradient::Cividis => Box::new(colorgrad::preset::cividis()),
+                Gradient::Cool => Box::new(colorgrad::preset::cool()),
+                Gradient::Cubehelix => Box::new(colorgrad::preset::cubehelix_default()),
+                Gradient::Inferno => Box::new(colorgrad::preset::inferno()),
+                Gradient::Magma => Box::new(colorgrad::preset::magma()),
+                Gradient::Plasma => Box::new(colorgrad::preset::plasma()),
+                Gradient::Rainbow => Box::new(colorgrad::preset::rainbow()),
+                Gradient::RdYlGn => Box::new(colorgrad::preset::rd_yl_gn()),
+                Gradient::Sinebow => Box::new(colorgrad::preset::sinebow()),
+                Gradient::Spectral => Box::new(colorgrad::preset::spectral()),
+                Gradient::Turbo => Box::new(colorgrad::preset::turbo()),
+                Gradient::Viridis => Box::new(colorgrad::preset::viridis()),
+                Gradient::Warm => Box::new(colorgrad::preset::warm()),
                 Gradient::Fruits => build_gradient(&[
                     "#00c21c", "#009dc9", "#ffd43e", "#ff2a70", "#b971ff", "#7ce300", "#feff62",
                 ]),
@@ -133,7 +135,7 @@ impl From<RainbowCmd> for Rainbow {
 
         let grad = if let Some(n) = cmd.sharp {
             if n > 1 {
-                grad.sharp(n as usize, 0.15)
+                Box::new(grad.sharp(n as u16, 0.15))
             } else {
                 grad
             }
@@ -147,11 +149,12 @@ impl From<RainbowCmd> for Rainbow {
     }
 }
 
-fn build_gradient(colors: &[&str]) -> colorgrad::Gradient {
-    colorgrad::CustomGradient::new()
-        .html_colors(colors)
-        .mode(colorgrad::BlendMode::Oklab)
-        .interpolation(colorgrad::Interpolation::CatmullRom)
-        .build()
-        .unwrap()
+fn build_gradient(colors: &[&str]) -> Box<dyn colorgrad::Gradient> {
+    Box::new(
+        colorgrad::GradientBuilder::new()
+            .html_colors(colors)
+            .mode(colorgrad::BlendMode::Oklab)
+            .build::<colorgrad::CatmullRomGradient>()
+            .unwrap(),
+    )
 }

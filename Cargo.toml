@@ -25,8 +25,8 @@ default = ["clap"]
 
 [dependencies]
 bstr = "1.4.0"
-clap = { version = "= 4.2.7", features = ["derive", "wrap_help"], optional = true }
-colorgrad = "0.6.2"
+clap = { version = "4.3.10", features = ["derive", "wrap_help"], optional = true }
+colorgrad = { git = "https://github.com/mazznoer/colorgrad-rs.git" }
 fastrand = "1.9.0"
 noise = { version = "0.8.2", default-features = false }
 unicode-segmentation = "1.10.1"
