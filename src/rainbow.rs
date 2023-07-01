@@ -258,7 +258,14 @@ mod tests {
 
     fn create_rb() -> Rainbow {
         fastrand::seed(0);
-        Rainbow::new(Box::new(colorgrad::preset::rainbow()), 0.03, false, false, 0, 0)
+        Rainbow::new(
+            Box::new(colorgrad::preset::rainbow()),
+            0.03,
+            false,
+            false,
+            0,
+            0,
+        )
     }
 
     #[test]
