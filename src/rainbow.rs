@@ -2,15 +2,17 @@ use std::io::{prelude::*, Write};
 use std::{thread, time};
 
 use bstr::{io::BufReadExt, ByteSlice};
-use colorgrad::{Color, Gradient};
+use colorgrad::Color;
 use noise::NoiseFn;
 use unicode_segmentation::UnicodeSegmentation;
 use unicode_width::UnicodeWidthChar;
 
+use crate::{Gradient, Opt};
+
 pub struct Rainbow {
     current_row: isize,
     current_col: isize,
-    gradient: Box<dyn Gradient>,
+    gradient: Box<dyn colorgrad::Gradient>,
     noise: noise::OpenSimplex,
     noise_scale: f64,
     invert: bool,
@@ -22,7 +24,7 @@ pub struct Rainbow {
 impl Rainbow {
     #[must_use]
     pub fn new(
-        gradient: Box<dyn Gradient>,
+        gradient: Box<dyn colorgrad::Gradient>,
         noise_scale: f64,
         invert: bool,
         animate: bool,
@@ -223,6 +225,85 @@ impl Rainbow {
             Ok(true)
         })
     }
+}
+
+impl From<Opt> for Rainbow {
+    fn from(cmd: Opt) -> Self {
+        if let Some(seed) = cmd.seed {
+            fastrand::seed(seed);
+        }
+
+        let grad: Box<dyn colorgrad::Gradient> = if let Some(colors) = cmd.custom {
+            Box::new(
+                colorgrad::GradientBuilder::new()
+                    .colors(&colors)
+                    .mode(colorgrad::BlendMode::Oklab)
+                    .build::<colorgrad::CatmullRomGradient>()
+                    .unwrap(),
+            )
+        } else if cmd.random_colors.is_some() {
+            let n = cmd.random_colors.unwrap();
+            let colors = (0..n).map(|_| random_color()).collect::<Vec<_>>();
+            Box::new(
+                colorgrad::GradientBuilder::new()
+                    .colors(&colors)
+                    .mode(colorgrad::BlendMode::Oklab)
+                    .build::<colorgrad::CatmullRomGradient>()
+                    .unwrap(),
+            )
+        } else {
+            match cmd.gradient {
+                Gradient::Cividis => Box::new(colorgrad::preset::cividis()),
+                Gradient::Cool => Box::new(colorgrad::preset::cool()),
+                Gradient::Cubehelix => Box::new(colorgrad::preset::cubehelix_default()),
+                Gradient::Inferno => Box::new(colorgrad::preset::inferno()),
+                Gradient::Magma => Box::new(colorgrad::preset::magma()),
+                Gradient::Plasma => Box::new(colorgrad::preset::plasma()),
+                Gradient::Rainbow => Box::new(colorgrad::preset::rainbow()),
+                Gradient::RdYlGn => Box::new(colorgrad::preset::rd_yl_gn()),
+                Gradient::Sinebow => Box::new(colorgrad::preset::sinebow()),
+                Gradient::Spectral => Box::new(colorgrad::preset::spectral()),
+                Gradient::Turbo => Box::new(colorgrad::preset::turbo()),
+                Gradient::Viridis => Box::new(colorgrad::preset::viridis()),
+                Gradient::Warm => Box::new(colorgrad::preset::warm()),
+                Gradient::Fruits => build_gradient(&[
+                    "#00c21c", "#009dc9", "#ffd43e", "#ff2a70", "#b971ff", "#7ce300", "#feff62",
+                ]),
+            }
+        };
+
+        let grad = if let Some(n) = cmd.sharp {
+            if n > 1 {
+                Box::new(grad.sharp(n as u16, 0.15))
+            } else {
+                grad
+            }
+        } else {
+            grad
+        };
+
+        let duration = cmd.duration.unwrap_or(5) as usize;
+        let speed = cmd.speed.unwrap_or(150);
+        Self::new(grad, cmd.scale, cmd.invert, cmd.animate, duration, speed)
+    }
+}
+
+fn random_color() -> Color {
+    if fastrand::bool() {
+        Color::from_hwba(fastrand::f32() * 360.0, fastrand::f32() * 0.5, 0.0, 1.0)
+    } else {
+        Color::from_hwba(fastrand::f32() * 360.0, 0.0, fastrand::f32() * 0.3, 1.0)
+    }
+}
+
+fn build_gradient(colors: &[&str]) -> Box<dyn colorgrad::Gradient> {
+    Box::new(
+        colorgrad::GradientBuilder::new()
+            .html_colors(colors)
+            .mode(colorgrad::BlendMode::Oklab)
+            .build::<colorgrad::CatmullRomGradient>()
+            .unwrap(),
+    )
 }
 
 // Reference http://www.w3.org/TR/2008/REC-WCAG20-20081211/#relativeluminancedef

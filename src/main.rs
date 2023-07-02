@@ -1,7 +1,7 @@
 #![warn(clippy::pedantic, clippy::nursery)]
 
 use clap::Parser;
-use lolcrab::{Rainbow, RainbowCmd};
+use lolcrab::{Opt, Rainbow};
 use std::{
     fs::File,
     io::{self, BufReader},
@@ -19,7 +19,7 @@ pub struct Cmdline {
     files: Vec<PathBuf>,
 
     #[command(flatten)]
-    rainbow: RainbowCmd,
+    rainbow: Opt,
 }
 
 fn main() -> Result<(), io::Error> {
