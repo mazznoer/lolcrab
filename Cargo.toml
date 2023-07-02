@@ -34,3 +34,8 @@ unicode-width = "0.1.10"
 
 # Allocator
 mimalloc = { version = "0.1.37", optional = true, default-features = false }
+
+[build-dependencies]
+clap = { version = "4.3.10", features = ["derive", "wrap_help"] }
+clap_complete = "4.3.1"
+colorgrad = { git = "https://github.com/mazznoer/colorgrad-rs.git" }
