@@ -1,5 +1,6 @@
 # `lolcrab`
 
+[![Build Status](https://github.com/mazznoer/lolcrab/actions/workflows/ci.yml/badge.svg)](https://github.com/mazznoer/lolcrab/actions)
 [![crates.io](https://img.shields.io/crates/v/lolcrab.svg)](https://crates.io/crates/lolcrab)
 
 Like [`lolcat`](https://github.com/busyloop/lolcat) but with [noise](https://en.wikipedia.org/wiki/OpenSimplex_noise) and more colorful. This is a fork of [lcat](https://github.com/davidkna/lcat-rs).
@@ -12,7 +13,7 @@ Pre-compiled binaries for Linux, macOS and Windows is avaliable on [release page
 
 ### Cargo
 
-`lolcrab` can be installed with [cargo](https://www.rust-lang.org/tools/install).
+`lolcrab` can be installed using [cargo](https://www.rust-lang.org/tools/install).
 
 ```shell
 cargo install lolcrab
