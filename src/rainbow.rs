@@ -56,16 +56,12 @@ impl Rainbow {
         self.current_col = 0;
     }
 
-    fn get_position(&mut self) -> f64 {
-        self.noise.get([
+    pub fn get_color(&mut self) -> Color {
+        let position = self.noise.get([
             self.current_col as f64 * self.noise_scale,
             self.current_row as f64 * self.noise_scale * 2.0,
-        ]) + 0.5
-    }
-
-    pub fn get_color(&mut self) -> Color {
-        let position = self.get_position();
-        self.gradient.at(position as f32)
+        ]) as f32;
+        self.gradient.at(remap(position, -0.5, 0.5, -0.1, 1.1))
     }
 
     #[inline]
@@ -103,19 +99,14 @@ impl Rainbow {
 
             if self.invert {
                 let lum = color_luminance(&col);
+                let eps = 0.013;
 
-                let fg = if lum < 0.5 {
-                    blend_color(
-                        &Color::new(1.0, 1.0, 1.0, remap(lum, 0.0, 0.5, 0.35, 0.85)),
-                        &col,
-                    )
+                let v = if lum < eps {
+                    remap(lum, eps, 0.0, 0.22, 0.2)
                 } else {
-                    blend_color(
-                        &Color::new(0.0, 0.0, 0.0, remap(lum, 0.5, 1.0, 0.40, 0.35)),
-                        &col,
-                    )
-                }
-                .to_rgba8();
+                    remap(lum, eps, 1.0, 0.0, 0.7)
+                };
+                let fg = Color::new(v, v, v, 1.0).to_rgba8();
 
                 write!(
                     out,
@@ -317,15 +308,6 @@ fn color_luminance(col: &Color) -> f32 {
     }
 
     0.2126 * lum(col.r) + 0.7152 * lum(col.g) + 0.0722 * lum(col.b)
-}
-
-fn blend_color(fg: &Color, bg: &Color) -> Color {
-    Color::new(
-        ((1.0 - fg.a) * bg.r) + (fg.a * fg.r),
-        ((1.0 - fg.a) * bg.g) + (fg.a * fg.g),
-        ((1.0 - fg.a) * bg.b) + (fg.a * fg.b),
-        1.0,
-    )
 }
 
 // Map t from range [a, b] to range [c, d]
