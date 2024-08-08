@@ -1,5 +1,4 @@
 use clap::{Parser, ValueEnum};
-use colorgrad::Color;
 
 #[derive(Debug, Clone, ValueEnum)]
 pub enum Gradient {
@@ -31,9 +30,9 @@ pub struct Opt {
     )]
     pub gradient: Gradient,
 
-    /// Create custom gradient using the specified colors
-    #[arg(short = 'c', long, num_args = 1.., value_name = "COLOR")]
-    pub custom: Option<Vec<Color>>,
+    /// Custom gradient in CSS gradient format
+    #[arg(short = 'c', long, value_name = "CSS Gradient")]
+    pub custom: Option<String>,
 
     /// Sharp gradient
     #[arg(long, value_name = "NUM")]

@@ -1,4 +1,5 @@
 use std::io::{prelude::*, Write};
+use std::process;
 use std::{thread, time};
 
 use bstr::{io::BufReadExt, ByteSlice};
@@ -224,13 +225,16 @@ impl From<Opt> for Rainbow {
             fastrand::seed(seed);
         }
 
-        let grad: Box<dyn colorgrad::Gradient> = if let Some(colors) = cmd.custom {
+        let grad: Box<dyn colorgrad::Gradient> = if let Some(ref css_grad) = cmd.custom {
             Box::new(
                 colorgrad::GradientBuilder::new()
-                    .colors(&colors)
+                    .css(css_grad)
                     .mode(colorgrad::BlendMode::Oklab)
                     .build::<colorgrad::CatmullRomGradient>()
-                    .unwrap(),
+                    .unwrap_or_else(|e| {
+                        println!("Error: {e}");
+                        process::exit(1);
+                    }),
             )
         } else if cmd.random_colors.is_some() {
             let n = cmd.random_colors.unwrap();
