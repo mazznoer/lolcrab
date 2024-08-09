@@ -18,7 +18,7 @@ pub enum Gradient {
     Warm,
 }
 
-#[derive(Debug, Parser)]
+#[derive(Clone, Debug, Parser)]
 pub struct Opt {
     /// Sets color gradient
     #[arg(
@@ -29,6 +29,10 @@ pub struct Opt {
         value_name = "NAME"
     )]
     pub gradient: Gradient,
+
+    /// Show all preset gradients
+    #[arg(long)]
+    pub presets: bool,
 
     /// Custom gradient in CSS gradient format
     #[arg(short = 'c', long, value_name = "CSS Gradient")]
