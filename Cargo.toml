@@ -21,21 +21,20 @@ lto = true
 strip = true
 
 [features]
-default = ["clap"]
+default = ["cli"]
+cli = ["clap", "clap_complete"]
 
 [dependencies]
 bstr = "1.9.1"
 clap = { version = "4.5.9", features = ["derive", "wrap_help"], optional = true }
 colorgrad = { version = "0.7.0" }
 fastrand = "2.1.0"
+mimalloc = { version = "0.1.37", optional = true, default-features = false }
 noise = { version = "0.9.0", default-features = false }
 unicode-segmentation = "1.10.1"
 unicode-width = "0.1.10"
 
-# Allocator
-mimalloc = { version = "0.1.37", optional = true, default-features = false }
-
 [build-dependencies]
-clap = { version = "4.5.9", features = ["derive", "wrap_help"] }
-clap_complete = "4.5.8"
-colorgrad = { version = "0.7.0" }
+clap = { version = "4.5.9", features = ["derive", "wrap_help"], optional = true }
+clap_complete = { version = "4.5.8", optional = true }
+#colorgrad = { version = "0.7.0" }

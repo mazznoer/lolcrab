@@ -1,5 +1,4 @@
 use std::io::{prelude::*, Write};
-use std::process;
 use std::{thread, time};
 
 use bstr::{io::BufReadExt, ByteSlice};
@@ -8,59 +7,78 @@ use noise::NoiseFn;
 use unicode_segmentation::UnicodeSegmentation;
 use unicode_width::UnicodeWidthChar;
 
+#[cfg(feature = "cli")]
+use std::process;
+
+#[cfg(feature = "cli")]
 use crate::{Gradient, Opt};
 
-pub struct Rainbow {
-    current_row: isize,
-    current_col: isize,
-    gradient: Box<dyn colorgrad::Gradient>,
-    noise: noise::OpenSimplex,
+pub struct Lolcrab {
+    pub gradient: Box<dyn colorgrad::Gradient>,
+    pub noise: noise::OpenSimplex,
     noise_scale: f64,
     invert: bool,
-    animate: bool,
-    duration: usize,
-    sleep_duration: time::Duration,
+    anim_duration: usize,
+    anim_sleep: time::Duration,
+    x: isize,
+    y: isize,
 }
 
-impl Rainbow {
+impl Lolcrab {
     #[must_use]
     pub fn new(
-        gradient: Box<dyn colorgrad::Gradient>,
-        noise_scale: f64,
-        invert: bool,
-        animate: bool,
-        duration: usize,
-        speed: u8,
+        gradient: Option<Box<dyn colorgrad::Gradient>>,
+        ns: Option<noise::OpenSimplex>,
     ) -> Self {
         Self {
-            gradient,
-            noise: noise::OpenSimplex::new(fastrand::u32(..)),
-            current_row: 0,
-            current_col: 0,
-            noise_scale,
-            invert,
-            animate,
-            duration: duration.clamp(1, 30),
-            sleep_duration: time::Duration::from_millis(speed.clamp(30, 200) as u64),
+            gradient: gradient.unwrap_or(Box::new(colorgrad::preset::rainbow())),
+            noise: ns.unwrap_or(noise::OpenSimplex::new(fastrand::u32(..))),
+            noise_scale: 0.034,
+            invert: false,
+            anim_duration: 5,
+            anim_sleep: time::Duration::from_millis(150),
+            x: 0,
+            y: 0,
         }
     }
 
-    pub fn step_row(&mut self, n_row: isize) {
-        self.current_row += n_row;
+    pub fn set_noise_scale(&mut self, scale: f64) {
+        self.noise_scale = scale;
+    }
+
+    pub fn set_invert(&mut self, invert: bool) {
+        self.invert = invert;
+    }
+
+    pub fn set_anim_speed(&mut self, speed: u8) {
+        self.anim_sleep = time::Duration::from_millis(speed.clamp(30, 200) as u64);
+    }
+
+    pub fn set_anim_duration(&mut self, duration: usize) {
+        self.anim_duration = duration.clamp(1, 30);
     }
 
     pub fn step_col(&mut self, n_col: isize) {
-        self.current_col += n_col;
+        self.x += n_col;
+    }
+
+    pub fn step_row(&mut self, n_row: isize) {
+        self.y += n_row;
     }
 
     pub fn reset_col(&mut self) {
-        self.current_col = 0;
+        self.x = 0;
+    }
+
+    pub fn reset_pos(&mut self) {
+        self.x = 0;
+        self.y = 0;
     }
 
     pub fn get_color(&mut self) -> Color {
         let position = self.noise.get([
-            self.current_col as f64 * self.noise_scale,
-            self.current_row as f64 * self.noise_scale * 2.0,
+            self.x as f64 * self.noise_scale,
+            self.y as f64 * self.noise_scale * 2.0,
         ]) as f32;
         self.gradient.at(remap(position, -0.5, 0.5, -0.1, 1.1))
     }
@@ -107,16 +125,13 @@ impl Rainbow {
                 } else {
                     remap(lum, eps, 1.0, 0.0, 0.7)
                 };
-                let fg = Color::new(v, v, v, 1.0).to_rgba8();
+                let [x, y, z, _] = Color::new(v, v, v, 1.0).to_rgba8();
 
-                write!(
-                    out,
-                    "\x1B[38;2;{};{};{};48;2;{};{};{}m{}",
-                    fg[0], fg[1], fg[2], r, g, b, grapheme
-                )?;
+                write!(out, "\x1B[48;2;{r};{g};{b};38;2;{x};{y};{z}m{grapheme}")?;
             } else {
-                write!(out, "\x1B[38;2;{};{};{}m{}", r, g, b, grapheme)?;
+                write!(out, "\x1B[38;2;{r};{g};{b}m{grapheme}")?;
             }
+
             self.step_col(
                 grapheme
                     .chars()
@@ -137,11 +152,11 @@ impl Rainbow {
                 .and_then(UnicodeWidthChar::width)
                 .unwrap_or(0);
         }
-        self.current_col = -(self.duration as isize - 1) * text_len as isize;
-        for _ in 0..self.duration {
+        self.x = -(self.anim_duration as isize - 1) * text_len as isize;
+        for _ in 0..self.anim_duration {
             write!(out, "\x1B[{}D", text.len())?;
             self.colorize(text, out)?;
-            thread::sleep(self.sleep_duration);
+            thread::sleep(self.anim_sleep);
         }
         writeln!(out)?;
         self.reset_col();
@@ -158,9 +173,10 @@ impl Rainbow {
             escaping = self.handle_grapheme(out, grapheme, escaping)?;
         }
 
-        out.write_all(b"\x1B[39m")?;
         if self.invert {
-            out.write_all(b"\x1B[49m")?;
+            out.write_all(b"\x1B[39;49m")?;
+        } else {
+            out.write_all(b"\x1B[39m")?;
         }
         out.flush()
     }
@@ -174,9 +190,10 @@ impl Rainbow {
             escaping = self.handle_grapheme(out, grapheme, escaping)?;
         }
 
-        out.write_all(b"\x1B[39m")?;
         if self.invert {
-            out.write_all(b"\x1B[49m")?;
+            out.write_all(b"\x1B[39;49m")?;
+        } else {
+            out.write_all(b"\x1B[39m")?;
         }
         out.flush()
     }
@@ -184,7 +201,7 @@ impl Rainbow {
     /// # Errors
     ///
     /// Will return `Err` if `input` or `out` cause I/O errors
-    fn colorize_read_anim(
+    pub fn colorize_read_anim(
         &mut self,
         input: &mut impl BufRead,
         out: &mut impl Write,
@@ -208,10 +225,6 @@ impl Rainbow {
         input: &mut impl BufRead,
         out: &mut impl Write,
     ) -> std::io::Result<()> {
-        if self.animate {
-            return self.colorize_read_anim(input, out);
-        }
-
         input.for_byte_line_with_terminator(|line| {
             self.colorize(line, out)?;
             Ok(true)
@@ -219,7 +232,8 @@ impl Rainbow {
     }
 }
 
-impl From<Opt> for Rainbow {
+#[cfg(feature = "cli")]
+impl From<Opt> for Lolcrab {
     fn from(cmd: Opt) -> Self {
         if let Some(seed) = cmd.seed {
             fastrand::seed(seed);
@@ -277,12 +291,20 @@ impl From<Opt> for Rainbow {
             grad
         };
 
-        let duration = cmd.duration.unwrap_or(5) as usize;
-        let speed = cmd.speed.unwrap_or(150);
-        Self::new(grad, cmd.scale, cmd.invert, cmd.animate, duration, speed)
+        let mut lol = Self::new(Some(grad), None);
+        lol.set_noise_scale(cmd.scale);
+        lol.set_invert(cmd.invert);
+        if let Some(speed) = cmd.speed {
+            lol.set_anim_speed(speed);
+        }
+        if let Some(duration) = cmd.duration {
+            lol.set_anim_duration(duration as usize);
+        }
+        lol
     }
 }
 
+#[cfg(feature = "cli")]
 fn random_color() -> Color {
     if fastrand::bool() {
         Color::from_hwba(fastrand::f32() * 360.0, fastrand::f32() * 0.5, 0.0, 1.0)
@@ -291,6 +313,7 @@ fn random_color() -> Color {
     }
 }
 
+#[cfg(feature = "cli")]
 fn build_gradient(colors: &[&str]) -> Box<dyn colorgrad::Gradient> {
     Box::new(
         colorgrad::GradientBuilder::new()
@@ -323,16 +346,9 @@ fn remap(t: f32, a: f32, b: f32, c: f32, d: f32) -> f32 {
 mod tests {
     use super::*;
 
-    fn create_rb() -> Rainbow {
+    fn create_rb() -> Lolcrab {
         fastrand::seed(0);
-        Rainbow::new(
-            Box::new(colorgrad::preset::rainbow()),
-            0.03,
-            false,
-            false,
-            0,
-            0,
-        )
+        Lolcrab::new(None, None)
     }
 
     #[test]
@@ -355,13 +371,12 @@ mod tests {
         let test = "f";
         let mut rb_a = create_rb();
         rb_a.colorize_str(&test, &mut Vec::new()).unwrap();
-
-        assert_eq!(rb_a.current_col, 1);
+        assert_eq!(rb_a.x, 1);
 
         let test = "😃";
         let mut rb_b = create_rb();
         rb_b.colorize_str(&test, &mut Vec::new()).unwrap();
-        assert_eq!(rb_b.current_col, 2);
+        assert_eq!(rb_b.x, 2);
     }
 
     #[test]

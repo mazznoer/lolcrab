@@ -1,10 +1,7 @@
-#![allow(clippy::cast_precision_loss)]
-
-#[cfg(feature = "clap")]
+#[cfg(feature = "cli")]
 mod cli;
-mod rainbow;
-
-pub use rainbow::*;
-
-#[cfg(feature = "clap")]
+#[cfg(feature = "cli")]
 pub use cli::*;
+
+mod rainbow;
+pub use rainbow::*;
