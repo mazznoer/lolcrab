@@ -11,20 +11,9 @@ use std::{
     path::PathBuf,
 };
 
-#[cfg(feature = "mimalloc")]
+#[cfg(all(feature = "cli", feature = "mimalloc"))]
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
-
-#[cfg(feature = "cli")]
-#[derive(Parser)]
-#[command(name = "lolcrab", version, about)]
-pub struct Cmdline {
-    #[arg(name = "File", default_value = "-", value_parser = clap::value_parser!(PathBuf))]
-    files: Vec<PathBuf>,
-
-    #[command(flatten)]
-    rainbow: Opt,
-}
 
 #[cfg(feature = "cli")]
 const SAMPLE_TEXT: &str = "\
@@ -39,9 +28,9 @@ o888o.`Y8bod8P'.o888o.`Y8bod8P'.d888b....`Y888''8o..`Y8bod8P.
 
 #[cfg(feature = "cli")]
 fn main() -> Result<(), io::Error> {
-    let opt = Cmdline::parse();
+    let opt = Opt::parse();
 
-    if opt.rainbow.presets {
+    if opt.presets {
         let presets = [
             "cividis",
             "cool",
@@ -61,7 +50,7 @@ fn main() -> Result<(), io::Error> {
         let stdout = io::stdout();
         let mut stdout = stdout.lock();
         for s in &presets {
-            let mut opt = opt.rainbow.clone();
+            let mut opt = opt.clone();
             opt.gradient = Gradient::from_str(s, true).unwrap();
             opt.custom = None;
             opt.random_colors = None;
@@ -72,8 +61,8 @@ fn main() -> Result<(), io::Error> {
         return Ok(());
     }
 
-    let animate = opt.rainbow.animate;
-    let mut lol: Lolcrab = opt.rainbow.into();
+    let animate = opt.animate;
+    let mut lol: Lolcrab = opt.clone().into();
 
     for path in opt.files {
         let stdout = io::stdout();

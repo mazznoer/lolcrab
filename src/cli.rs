@@ -1,4 +1,5 @@
 use clap::{Parser, ValueEnum};
+use std::path;
 
 #[derive(Debug, Clone, ValueEnum)]
 pub enum Gradient {
@@ -19,7 +20,12 @@ pub enum Gradient {
 }
 
 #[derive(Clone, Debug, Parser)]
+#[command(name = "lolcrab", version, about)]
 pub struct Opt {
+    /// Files to read
+    #[arg(name = "File", default_value = "-", value_parser = clap::value_parser!(path::PathBuf))]
+    pub files: Vec<path::PathBuf>,
+
     /// Sets color gradient
     #[arg(
         short,
