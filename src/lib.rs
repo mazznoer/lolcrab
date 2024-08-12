@@ -21,6 +21,7 @@ pub struct Lolcrab {
     pub noise: noise::OpenSimplex,
     noise_scale: f64,
     invert: bool,
+    tab_width: isize,
     anim_duration: usize,
     anim_sleep: time::Duration,
     x: isize,
@@ -38,6 +39,7 @@ impl Lolcrab {
             noise: ns.unwrap_or(noise::OpenSimplex::new(fastrand::u32(..))),
             noise_scale: 0.034,
             invert: false,
+            tab_width: 4,
             anim_duration: 5,
             anim_sleep: time::Duration::from_millis(150),
             x: 0,
@@ -51,6 +53,10 @@ impl Lolcrab {
 
     pub fn set_invert(&mut self, invert: bool) {
         self.invert = invert;
+    }
+
+    pub fn set_tab_width(&mut self, width: usize) {
+        self.tab_width = width as isize;
     }
 
     pub fn set_anim_speed(&mut self, speed: u8) {
@@ -146,22 +152,27 @@ impl Lolcrab {
         Ok(escaping)
     }
 
+    // TODO
     fn colorize_anim(&mut self, text: &[u8], out: &mut impl Write) -> std::io::Result<()> {
-        let mut text_len = 0;
+        let mut text_len: isize = 0;
         for g in text.graphemes() {
-            text_len += g
-                .chars()
-                .next()
-                .and_then(UnicodeWidthChar::width)
-                .unwrap_or(0);
+            if g == "\t" {
+                text_len += self.tab_width - text_len % self.tab_width;
+            } else {
+                text_len += g
+                    .chars()
+                    .next()
+                    .and_then(UnicodeWidthChar::width)
+                    .unwrap_or(0) as isize;
+            }
         }
-        self.x = -(self.anim_duration as isize - 1) * text_len as isize;
+        self.x = -(self.anim_duration as isize - 1) * text_len;
         for _ in 0..self.anim_duration {
-            write!(out, "\x1B[{}D", text.len())?;
+            out.write_all(b"\x1B[0G")?;
             self.colorize(text, out)?;
             thread::sleep(self.anim_sleep);
         }
-        writeln!(out)?;
+        out.write_all(b"\n")?;
         self.reset_col();
         self.step_row(1);
         out.flush()
@@ -173,7 +184,19 @@ impl Lolcrab {
     pub fn colorize(&mut self, text: &[u8], out: &mut impl Write) -> std::io::Result<()> {
         let mut escaping = false;
         for grapheme in text.graphemes() {
-            escaping = self.handle_grapheme(out, grapheme, escaping)?;
+            if grapheme == "\t" {
+                let n = self.tab_width - self.x % self.tab_width;
+                if self.invert {
+                    for _ in 0..n {
+                        escaping = self.handle_grapheme(out, " ", escaping)?;
+                    }
+                } else {
+                    self.step_col(n);
+                    out.write_all(" ".repeat(n as usize).as_bytes())?;
+                }
+            } else {
+                escaping = self.handle_grapheme(out, grapheme, escaping)?;
+            }
         }
 
         if self.invert {
@@ -190,7 +213,19 @@ impl Lolcrab {
     pub fn colorize_str(&mut self, text: &str, out: &mut impl Write) -> std::io::Result<()> {
         let mut escaping = false;
         for grapheme in UnicodeSegmentation::graphemes(text, true) {
-            escaping = self.handle_grapheme(out, grapheme, escaping)?;
+            if grapheme == "\t" {
+                let n = self.tab_width - self.x % self.tab_width;
+                if self.invert {
+                    for _ in 0..n {
+                        escaping = self.handle_grapheme(out, " ", escaping)?;
+                    }
+                } else {
+                    self.step_col(n);
+                    out.write_all(" ".repeat(n as usize).as_bytes())?;
+                }
+            } else {
+                escaping = self.handle_grapheme(out, grapheme, escaping)?;
+            }
         }
 
         if self.invert {
@@ -209,6 +244,7 @@ impl Lolcrab {
         input: &mut impl BufRead,
         out: &mut impl Write,
     ) -> std::io::Result<()> {
+        // hide the cursor
         out.write_all(b"\x1B[?25l")?;
 
         input.for_byte_line(|line| {
@@ -216,6 +252,7 @@ impl Lolcrab {
             Ok(true)
         })?;
 
+        // show the cursor
         out.write_all(b"\x1B[?25h")?;
         Ok(())
     }
@@ -370,16 +407,60 @@ mod tests {
     }
 
     #[test]
-    fn test_char_width() {
-        let test = "f";
-        let mut rb_a = create_rb();
-        rb_a.colorize_str(&test, &mut Vec::new()).unwrap();
-        assert_eq!(rb_a.x, 1);
+    fn test_str_width() {
+        let mut lol = Lolcrab::new(None, None);
+        let mut out = Vec::new();
 
-        let test = "😃";
-        let mut rb_b = create_rb();
-        rb_b.colorize_str(&test, &mut Vec::new()).unwrap();
-        assert_eq!(rb_b.x, 2);
+        lol.colorize_str("f", &mut out).unwrap();
+        assert_eq!(lol.x, 1);
+
+        lol.reset_col();
+        lol.colorize_str("😃", &mut out).unwrap();
+        assert_eq!(lol.x, 2);
+
+        lol.reset_col();
+        lol.colorize_str(" ", &mut out).unwrap();
+        assert_eq!(lol.x, 1);
+
+        lol.reset_col();
+        lol.colorize_str("  ", &mut out).unwrap();
+        assert_eq!(lol.x, 2);
+
+        // Tab characters
+
+        lol.reset_col();
+        lol.colorize_str("\t", &mut out).unwrap();
+        assert_eq!(lol.x, 4);
+
+        lol.reset_col();
+        lol.colorize_str(" \t", &mut out).unwrap();
+        assert_eq!(lol.x, 4);
+
+        lol.reset_col();
+        lol.colorize_str("  \t", &mut out).unwrap();
+        assert_eq!(lol.x, 4);
+
+        lol.reset_col();
+        lol.colorize_str("   \t", &mut out).unwrap();
+        assert_eq!(lol.x, 4);
+
+        lol.reset_col();
+        lol.set_tab_width(8);
+        lol.colorize_str("   \t", &mut out).unwrap();
+        assert_eq!(lol.x, 8);
+
+        lol.reset_col();
+        lol.set_tab_width(4);
+        lol.colorize_str("    \t", &mut out).unwrap();
+        assert_eq!(lol.x, 8);
+
+        lol.reset_col();
+        lol.colorize_str("\t  ", &mut out).unwrap();
+        assert_eq!(lol.x, 6);
+
+        lol.reset_col();
+        lol.colorize_str("\t  \t", &mut out).unwrap();
+        assert_eq!(lol.x, 8);
     }
 
     #[test]
