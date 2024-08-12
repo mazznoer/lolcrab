@@ -67,23 +67,32 @@ impl Lolcrab {
         self.anim_duration = duration.clamp(1, 30);
     }
 
+    #[doc(hidden)]
     pub fn step_col(&mut self, n_col: isize) {
         self.x += n_col;
     }
 
+    #[doc(hidden)]
     pub fn step_row(&mut self, n_row: isize) {
         self.y += n_row;
     }
 
+    #[doc(hidden)]
     pub fn reset_col(&mut self) {
         self.x = 0;
     }
 
-    pub fn reset_pos(&mut self) {
+    pub fn reset_position(&mut self) {
         self.x = 0;
         self.y = 0;
     }
 
+    pub fn randomize_position(&mut self) {
+        self.x = 0;
+        self.y = fastrand::isize(..);
+    }
+
+    #[doc(hidden)]
     pub fn get_color(&mut self) -> Color {
         let position = self.noise.get([
             self.x as f64 * self.noise_scale,
@@ -384,30 +393,29 @@ fn remap(t: f32, a: f32, b: f32, c: f32, d: f32) -> f32 {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::Lolcrab;
 
-    fn create_rb() -> Lolcrab {
-        fastrand::seed(0);
-        Lolcrab::new(None, None)
+    fn new_lol(seed: u32) -> Lolcrab {
+        Lolcrab::new(None, Some(noise::OpenSimplex::new(seed)))
     }
 
     #[test]
-    fn test_eq_str_u8() {
-        let test = "foobar";
+    fn eq_str_u8() {
+        let text = "foobar";
 
-        let mut rb_a = create_rb();
-        let mut out_a = Vec::new();
-        rb_a.colorize(&test.as_bytes(), &mut out_a).unwrap();
+        let mut lol1 = new_lol(7);
+        let mut out1 = Vec::new();
+        lol1.colorize(&text.as_bytes(), &mut out1).unwrap();
 
-        let mut rb_b = create_rb();
-        let mut out_b = Vec::new();
-        rb_b.colorize_str(&test, &mut out_b).unwrap();
+        let mut lol2 = new_lol(7);
+        let mut out2 = Vec::new();
+        lol2.colorize_str(&text, &mut out2).unwrap();
 
-        assert_eq!(out_a, out_b);
+        assert_eq!(out1, out2);
     }
 
     #[test]
-    fn test_str_width() {
+    fn str_width() {
         let mut lol = Lolcrab::new(None, None);
         let mut out = Vec::new();
 
@@ -464,23 +472,51 @@ mod tests {
     }
 
     #[test]
-    fn test_step_row() {
-        let test_string = "foobar\n";
+    fn step_row() {
+        let text = "foobar\n";
 
-        let mut rb_a = create_rb();
-        rb_a.colorize(&test_string.as_bytes(), &mut Vec::new())
-            .unwrap();
-        let mut rb_b = create_rb();
-        rb_b.step_row(1);
-        assert_eq!(rb_a.get_color(), rb_b.get_color(),);
+        let mut lol1 = new_lol(0);
+        lol1.colorize(&text.as_bytes(), &mut Vec::new()).unwrap();
+
+        let mut lol2 = new_lol(0);
+        lol2.step_row(1);
+
+        assert_eq!(lol1.x, lol2.x);
+        assert_eq!(lol1.y, lol2.y);
+        assert_eq!(lol1.get_color().to_rgba8(), lol2.get_color().to_rgba8());
     }
 
     #[test]
-    fn test_reset_col() {
-        let mut rb_a = create_rb();
-        let mut rb_b = create_rb();
-        rb_a.step_col(20);
-        rb_a.reset_col();
-        assert_eq!(rb_a.get_color(), rb_b.get_color(),);
+    fn reset_col() {
+        let mut lol1 = new_lol(23);
+        let mut lol2 = new_lol(23);
+        lol1.step_col(20);
+        lol1.reset_col();
+        assert_eq!(lol1.get_color().to_rgba8(), lol2.get_color().to_rgba8());
+    }
+
+    #[test]
+    fn noise_position() {
+        let mut lol = Lolcrab::new(None, None);
+        let text = "Lolcrab\nRust";
+
+        let mut out1 = Vec::new();
+        lol.colorize_str(text, &mut out1).unwrap();
+
+        let mut out2 = Vec::new();
+        lol.colorize_str(text, &mut out2).unwrap();
+
+        let mut out3 = Vec::new();
+        lol.reset_position();
+        lol.colorize_str(text, &mut out3).unwrap();
+
+        let mut out4 = Vec::new();
+        lol.randomize_position();
+        lol.colorize_str(text, &mut out4).unwrap();
+
+        assert_ne!(out1, out2);
+        assert_eq!(out1, out3);
+        assert_ne!(out1, out4);
+        assert_ne!(out2, out4);
     }
 }
