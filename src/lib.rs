@@ -89,7 +89,7 @@ impl Lolcrab {
 
     pub fn randomize_position(&mut self) {
         self.x = 0;
-        self.y = fastrand::isize(..);
+        self.y = fastrand::isize(-999_999..999_999);
     }
 
     #[doc(hidden)]
