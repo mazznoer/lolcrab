@@ -1,7 +1,7 @@
 #![warn(clippy::pedantic, clippy::nursery)]
 
 #[cfg(feature = "cli")]
-use clap::{Parser, ValueEnum};
+use clap::{CommandFactory, Parser, ValueEnum};
 #[cfg(feature = "cli")]
 use lolcrab::{Gradient, Lolcrab, Opt};
 #[cfg(feature = "cli")]
@@ -29,6 +29,17 @@ o888o.`Y8bod8P'.o888o.`Y8bod8P'.d888b....`Y888''8o..`Y8bod8P.
 #[cfg(feature = "cli")]
 fn main() -> Result<(), io::Error> {
     let opt = Opt::parse();
+    let stdout = io::stdout();
+    let mut stdout = stdout.lock();
+
+    if opt.help {
+        let mut lol = Lolcrab::new(None, None);
+        lol.colorize_str(
+            &Opt::command().render_help().ansi().to_string(),
+            &mut stdout,
+        )?;
+        return Ok(());
+    }
 
     if opt.presets {
         let presets = [
@@ -47,8 +58,6 @@ fn main() -> Result<(), io::Error> {
             "viridis",
             "warm",
         ];
-        let stdout = io::stdout();
-        let mut stdout = stdout.lock();
         for s in &presets {
             let mut opt = opt.clone();
             opt.gradient = Gradient::from_str(s, true).unwrap();
@@ -65,8 +74,6 @@ fn main() -> Result<(), io::Error> {
     let mut lol: Lolcrab = opt.clone().into();
 
     for path in opt.files {
-        let stdout = io::stdout();
-        let mut stdout = stdout.lock();
         if path == PathBuf::from("-") {
             let stdin = io::stdin();
             let mut stdin = stdin.lock();

@@ -20,7 +20,7 @@ pub enum Gradient {
 }
 
 #[derive(Clone, Debug, Parser)]
-#[command(name = "lolcrab", version, about)]
+#[command(name = "lolcrab", version, disable_help_flag = true)]
 pub struct Opt {
     /// Files to read
     #[arg(name = "File", default_value = "-", value_parser = clap::value_parser!(path::PathBuf))]
@@ -75,6 +75,10 @@ pub struct Opt {
     /// Animation speed
     #[arg(long)]
     pub speed: Option<u8>,
+
+    /// Print help
+    #[arg(short = 'h', long)]
+    pub help: bool,
 }
 
 #[test]
