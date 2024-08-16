@@ -14,7 +14,7 @@ use std::process;
 mod cli;
 
 #[cfg(feature = "cli")]
-pub use cli::*;
+pub use cli::{Gradient, Opt};
 
 pub struct Lolcrab {
     pub gradient: Box<dyn colorgrad::Gradient>,

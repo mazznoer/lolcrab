@@ -1,21 +1,17 @@
 #![warn(clippy::pedantic, clippy::nursery)]
 
-#[cfg(feature = "cli")]
 use clap::{CommandFactory, Parser, ValueEnum};
-#[cfg(feature = "cli")]
 use lolcrab::{Gradient, Lolcrab, Opt};
-#[cfg(feature = "cli")]
 use std::{
     fs::File,
     io::{self, BufReader, Write},
     path::PathBuf,
 };
 
-#[cfg(all(feature = "cli", feature = "mimalloc"))]
+#[cfg(feature = "mimalloc")]
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-#[cfg(feature = "cli")]
 const SAMPLE_TEXT: &str = "\
 oooo............oooo...github.com/mazznoer/lolcrab...o8.
 `888............`888...............................'888.
@@ -26,7 +22,6 @@ oooo............oooo...github.com/mazznoer/lolcrab...o8.
 o888o.`Y8bod8P'.o888o.`Y8bod8P'.d888b....`Y888''8o..`Y8bod8P.
 ";
 
-#[cfg(feature = "cli")]
 fn main() -> Result<(), io::Error> {
     let opt = Opt::parse();
     let stdout = io::stdout();
@@ -99,6 +94,3 @@ fn main() -> Result<(), io::Error> {
 
     Ok(())
 }
-
-#[cfg(not(feature = "cli"))]
-fn main() {}
