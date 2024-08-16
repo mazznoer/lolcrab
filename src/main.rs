@@ -32,12 +32,16 @@ fn main() -> Result<(), io::Error> {
     let stdout = io::stdout();
     let mut stdout = stdout.lock();
 
-    if opt.help {
+    if opt.help || opt.version {
         let mut lol = Lolcrab::new(None, None);
-        lol.colorize_str(
-            &Opt::command().render_help().ansi().to_string(),
-            &mut stdout,
-        )?;
+        if opt.help {
+            lol.colorize_str(
+                &Opt::command().render_help().ansi().to_string(),
+                &mut stdout,
+            )?;
+        } else {
+            lol.colorize_str(&Opt::command().render_long_version(), &mut stdout)?;
+        }
         return Ok(());
     }
 

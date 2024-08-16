@@ -20,7 +20,12 @@ pub enum Gradient {
 }
 
 #[derive(Clone, Debug, Parser)]
-#[command(name = "lolcrab", version, disable_help_flag = true)]
+#[command(
+    name = "lolcrab",
+    version,
+    disable_help_flag = true,
+    disable_version_flag = true
+)]
 pub struct Opt {
     /// Files to read
     #[arg(name = "File", default_value = "-", value_parser = clap::value_parser!(path::PathBuf))]
@@ -79,6 +84,10 @@ pub struct Opt {
     /// Print help
     #[arg(short = 'h', long)]
     pub help: bool,
+
+    /// Print version
+    #[arg(short = 'V', long)]
+    pub version: bool,
 }
 
 #[test]
