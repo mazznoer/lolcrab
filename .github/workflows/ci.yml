@@ -51,10 +51,10 @@ jobs:
 
     - name: Run lolcrab (Windows)
       if: matrix.os == 'windows-latest'
-      run: |
-        echo "Version" && ^
-        target/debug/lolcrab --version && ^
-        echo "Help" && ^
-        target/debug/lolcrab --help && ^
-        echo "Test" && ^
+      run: >
+        echo "Version" &&
+        target/debug/lolcrab --version &&
+        echo "Help" &&
+        target/debug/lolcrab --help &&
+        echo "Test" &&
         echo "Make your life more colorful" | target/debug/lolcrab
