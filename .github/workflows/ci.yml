@@ -19,16 +19,31 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Build
-      run: cargo build --verbose --all-features
+      run: |
+        cargo build --verbose --no-default-features && \
+        cargo build --verbose --all-features
 
     - name: Run tests
-      run: cargo test --verbose --all-features
+      run: |
+        cargo test --verbose --no-default-features && \
+        cargo test --verbose --all-features
+
+    - name: Run cargo clippy
+      run: |
+        cargo clippy --no-default-features -- -D warnings && \
+        cargo clippy --all-features -- -D warnings
 
     - name: Run cargo fmt
       run: cargo fmt --all -- --check
 
-    - name: Run cargo clippy
-      run: cargo clippy --all-features -- -D warnings
+    - name: Run lolcrab
+      run: |
+        echo "Version" && \
+        ./target/debug/lolcrab --version && \
+        echo "Help" && \
+        ./target/debug/lolcrab --help && \
+        echo "Test" && \
+        ./target/debug/lolcrab <<< "Make your life more colorful"
