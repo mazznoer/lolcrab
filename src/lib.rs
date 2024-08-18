@@ -18,7 +18,7 @@ pub use cli::{Gradient, Opt};
 
 pub struct Lolcrab {
     pub gradient: Box<dyn colorgrad::Gradient>,
-    pub noise: noise::OpenSimplex,
+    pub noise: Box<dyn noise::NoiseFn<f64, 2>>,
     noise_scale: f64,
     invert: bool,
     tab_width: isize,
@@ -32,11 +32,11 @@ impl Lolcrab {
     #[must_use]
     pub fn new(
         gradient: Option<Box<dyn colorgrad::Gradient>>,
-        ns: Option<noise::OpenSimplex>,
+        ns: Option<Box<dyn noise::NoiseFn<f64, 2>>>,
     ) -> Self {
         Self {
             gradient: gradient.unwrap_or(Box::new(colorgrad::preset::rainbow())),
-            noise: ns.unwrap_or(noise::OpenSimplex::new(fastrand::u32(..))),
+            noise: ns.unwrap_or(Box::new(noise::OpenSimplex::new(fastrand::u32(..)))),
             noise_scale: 0.034,
             invert: false,
             tab_width: 4,
@@ -396,7 +396,7 @@ mod tests {
     use super::Lolcrab;
 
     fn new_lol(seed: u32) -> Lolcrab {
-        Lolcrab::new(None, Some(noise::OpenSimplex::new(seed)))
+        Lolcrab::new(None, Some(Box::new(noise::OpenSimplex::new(seed))))
     }
 
     #[test]
