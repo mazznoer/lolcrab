@@ -25,6 +25,7 @@ jobs:
       run: |
         cargo build --verbose --no-default-features
         cargo build --verbose --all-features
+        cargo build --examples
 
     - name: Run tests
       run: |
@@ -37,24 +38,25 @@ jobs:
         cargo clippy --all-features -- -D warnings
 
     - name: Run cargo fmt
-      run: cargo fmt --all -- --check
+      run: |
+        cargo fmt --all -- --check
 
     - name: Run lolcrab
       if: matrix.os != 'windows-latest'
       run: |
-        echo "Version" && \
-        ./target/debug/lolcrab --version && \
-        echo "Help" && \
-        ./target/debug/lolcrab --help && \
-        echo "Test" && \
+        echo "Version"
+        ./target/debug/lolcrab --version
+        echo "Help"
+        ./target/debug/lolcrab --help
+        echo "Test"
         ./target/debug/lolcrab <<< "Make your life more colorful"
 
     - name: Run lolcrab (Windows)
       if: matrix.os == 'windows-latest'
-      run: >
-        echo "Version" &&
-        target/debug/lolcrab --version &&
-        echo "Help" &&
-        target/debug/lolcrab --help &&
-        echo "Test" &&
+      run: |
+        echo "Version"
+        target/debug/lolcrab --version
+        echo "Help"
+        target/debug/lolcrab --help
+        echo "Test"
         echo "Make your life more colorful" | target/debug/lolcrab

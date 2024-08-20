@@ -1,13 +1,17 @@
 SHELL := /bin/bash
 
-.PHONY: all check test
+.PHONY: all lib bin
 
-all: check test
+all: lib bin
 
-check:
-	cargo build --all-features && \
-	cargo clippy --all-features -- -D warnings && \
-	cargo fmt --all -- --check
+lib:
+	cargo build --no-default-features && \
+	cargo clippy --no-default-features -- -D warnings && \
+	cargo fmt --all -- --check && \
+	cargo test --no-default-features
 
-test:
-	cargo test --all-features
+bin:
+	cargo build && \
+	cargo clippy -- -D warnings && \
+	cargo fmt --all -- --check && \
+	cargo test
