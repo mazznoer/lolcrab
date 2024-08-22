@@ -5,9 +5,11 @@ include!("src/cli.rs");
 fn main() -> Result<(), clap::Error> {
     use clap::CommandFactory;
     use clap_complete::{generate_to, Shell};
-    use std::{env, fs, path};
+    use std::{fs, path, process::exit};
 
-    let out_dir = env!("OUT_DIR");
+    let out_dir = option_env!("OUT_DIR").unwrap_or_else(|| {
+        exit(0);
+    });
     let dir = path::Path::new(&out_dir).join("completions/");
     if !dir.exists() {
         fs::create_dir(dir.clone()).expect("Failed to create 'completions' directory.");
