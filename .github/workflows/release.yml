@@ -8,6 +8,9 @@ on:
     tags:
       - v[0-9]+.*
 
+env:
+  OUT_DIR: target
+
 jobs:
   upload-assets:
     strategy:
@@ -31,6 +34,10 @@ jobs:
           # [default value: windows]
           # [possible values: all, unix, windows, none]
           zip: windows
+          # create dir
+          leading-dir: true
+          # additional files
+          include: target/completions
         env:
           # (required)
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

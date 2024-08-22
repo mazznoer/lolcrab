@@ -7,7 +7,7 @@ fn main() -> Result<(), clap::Error> {
     use clap_complete::{generate_to, Shell};
     use std::{env, fs, path};
 
-    let out_dir = env::var_os("OUT_DIR").expect("OUT_DIR not set");
+    let out_dir = env!("OUT_DIR");
     let dir = path::Path::new(&out_dir).join("completions/");
     if !dir.exists() {
         fs::create_dir(dir.clone()).expect("Failed to create 'completions' directory.");
