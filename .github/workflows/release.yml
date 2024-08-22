@@ -8,9 +8,6 @@ on:
     tags:
       - v[0-9]+.*
 
-env:
-  OUT_DIR: target
-
 jobs:
   upload-assets:
     strategy:
@@ -39,5 +36,6 @@ jobs:
           # additional files
           include: target/completions
         env:
+          OUT_DIR: target
           # (required)
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

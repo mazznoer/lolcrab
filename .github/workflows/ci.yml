@@ -10,7 +10,6 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  OUT_DIR: target
 
 jobs:
   build:
@@ -27,6 +26,8 @@ jobs:
         cargo build --verbose --no-default-features
         cargo build --verbose --all-features
         cargo build --examples
+      env:
+        OUT_DIR: target
 
     - name: Run tests
       run: |
@@ -42,12 +43,10 @@ jobs:
       run: |
         cargo fmt --all -- --check
 
-    - name: Testing
-    #  if: matrix.os != 'windows-latest'
+    - name: Check shell completions
+      if: matrix.os != 'windows-latest'
       run: |
-        echo "OUT_DIR: $OUT_DIR"
-        ls "$OUT_DIR"
-        ls "${OUT_DIR}/completions/"
+        ls -A target/completions
 
     - name: Run lolcrab
       if: matrix.os != 'windows-latest'
