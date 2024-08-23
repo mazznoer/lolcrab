@@ -1,6 +1,6 @@
 [package]
 name = "lolcrab"
-version = "0.4.0"
+version = "0.4.1"
 authors = [
     "David Knaack <davidkna@users.noreply.github.com>",
     "Nor Khasyatillah <mazznoer@ymail.com>",
@@ -20,6 +20,9 @@ exclude = [
     "test_data/*",
     "Makefile",
 ]
+
+[package.metadata.docs.rs]
+no-default-features = true
 
 [profile.release]
 lto = true
