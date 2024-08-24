@@ -1,3 +1,16 @@
+//! # `Lolcrab`
+//!
+//! Like [`lolcat`](https://github.com/busyloop/lolcat) but with [noise](https://en.wikipedia.org/wiki/OpenSimplex_noise) and more colorful.
+//!
+//! ## Using `lolcrab` as a Library
+//!
+//! Add this to your Cargo.toml
+//!
+//! ```toml
+//! lolcrab = { version = "0.4", default-features = "false" }
+//! ```
+//!
+
 use std::io::{prelude::*, Write};
 use std::{thread, time};
 
@@ -16,6 +29,27 @@ mod cli;
 #[cfg(feature = "cli")]
 pub use cli::{Gradient, Opt};
 
+/// # Example
+///
+/// ```
+/// # use std::error::Error;
+/// use lolcrab::Lolcrab;
+///
+/// # fn main() -> Result<(), Box<dyn Error>> {
+/// let stdout = std::io::stdout();
+/// let mut stdout = stdout.lock();
+///
+/// // Initialize Lolcrab using default gradient and default noise
+/// let mut lol = Lolcrab::new(None, None);
+///
+/// lol.colorize_str("Lolcrab is the best", &mut stdout)?;
+///
+/// lol.set_invert(true);
+/// lol.randomize_position();
+/// lol.colorize_str("Lolcrab is the best", &mut stdout)?;
+/// # Ok(())
+/// # }
+/// ```
 pub struct Lolcrab {
     pub gradient: Box<dyn colorgrad::Gradient>,
     pub noise: Box<dyn noise::NoiseFn<f64, 2>>,
@@ -47,22 +81,27 @@ impl Lolcrab {
         }
     }
 
+    /// Noise scale. Try value between 0.01 .. 0.2
     pub fn set_noise_scale(&mut self, scale: f64) {
         self.noise_scale = scale;
     }
 
+    /// Colorize the background if set to true
     pub fn set_invert(&mut self, invert: bool) {
         self.invert = invert;
     }
 
+    /// Tab stop width (default: 4)
     pub fn set_tab_width(&mut self, width: usize) {
         self.tab_width = width as isize;
     }
 
+    /// Animation speed (30..200)
     pub fn set_anim_speed(&mut self, speed: u8) {
         self.anim_sleep = time::Duration::from_millis(speed.clamp(30, 200) as u64);
     }
 
+    /// Animation duration (1..30)
     pub fn set_anim_duration(&mut self, duration: usize) {
         self.anim_duration = duration.clamp(1, 30);
     }
@@ -82,11 +121,13 @@ impl Lolcrab {
         self.x = 0;
     }
 
+    /// Reset noise position
     pub fn reset_position(&mut self) {
         self.x = 0;
         self.y = 0;
     }
 
+    /// Randomize noise position
     pub fn randomize_position(&mut self) {
         self.x = 0;
         self.y = fastrand::isize(-999_999..999_999);
