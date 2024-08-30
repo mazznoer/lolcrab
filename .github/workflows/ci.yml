@@ -48,6 +48,14 @@ jobs:
       run: |
         ls -A target/completions
 
+    - name: Check shell scripts
+      if: matrix.os == 'ubuntu-latest'
+      run: >
+        for file in scripts/*.sh; do;
+            [ -e "$file" ] || continue;
+            bash -n "$file";
+        done
+
     - name: Run lolcrab
       if: matrix.os != 'windows-latest'
       run: |
