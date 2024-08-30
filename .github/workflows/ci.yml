@@ -51,7 +51,7 @@ jobs:
     - name: Check shell scripts
       if: matrix.os == 'ubuntu-latest'
       run: >
-        for file in scripts/*.sh; do;
+        for file in scripts/*.sh; do
             [ -e "$file" ] || continue;
             bash -n "$file";
         done
