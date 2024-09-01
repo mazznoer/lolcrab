@@ -24,59 +24,37 @@ o888o.`Y8bod8P'.o888o.`Y8bod8P'.d888b....`Y888''8o..`Y8bod8P.
 
 fn main() -> Result<(), io::Error> {
     let opt = Opt::parse();
-    let stdout = io::stdout();
-    let mut stdout = stdout.lock();
+    let mut stdout = io::stdout().lock();
+    let mut lol: Lolcrab = opt.clone().into();
 
-    if opt.help || opt.version {
-        let mut lol = Lolcrab::new(None, None);
-        if opt.help {
-            lol.colorize_str(
-                &Opt::command().render_help().ansi().to_string(),
-                &mut stdout,
-            )?;
-        } else {
-            lol.colorize_str(&Opt::command().render_long_version(), &mut stdout)?;
-        }
+    if opt.help {
+        lol.colorize_str(
+            &Opt::command().render_help().ansi().to_string(),
+            &mut stdout,
+        )?;
+        return Ok(());
+    }
+
+    if opt.version {
+        lol.colorize_str(&Opt::command().render_long_version(), &mut stdout)?;
         return Ok(());
     }
 
     if opt.presets {
-        let presets = [
-            "cividis",
-            "cool",
-            "cubehelix",
-            "fruits",
-            "inferno",
-            "magma",
-            "plasma",
-            "rainbow",
-            "rd-yl-gn",
-            "sinebow",
-            "spectral",
-            "turbo",
-            "viridis",
-            "warm",
-        ];
-        for s in &presets {
-            let mut opt = opt.clone();
-            opt.gradient = Gradient::from_str(s, true).unwrap();
-            opt.custom = None;
-            opt.random_colors = None;
-            let mut lol: Lolcrab = opt.into();
-            writeln!(stdout, "\n{s}\n")?;
+        for g in Gradient::value_variants() {
+            let name = format!("{g:?}").to_lowercase();
+            let name = if name == "rdylgn" { "rd-yl-gn" } else { &name };
+            writeln!(stdout, "\n{name}\n")?;
+            lol.gradient = g.to_gradient();
             lol.colorize_str(SAMPLE_TEXT, &mut stdout)?;
         }
         return Ok(());
     }
 
-    let animate = opt.animate;
-    let mut lol: Lolcrab = opt.clone().into();
-
     for path in opt.files {
         if path == PathBuf::from("-") {
-            let stdin = io::stdin();
-            let mut stdin = stdin.lock();
-            if animate {
+            let mut stdin = io::stdin().lock();
+            if opt.animate {
                 lol.colorize_read_anim(&mut stdin, &mut stdout)?;
             } else {
                 lol.colorize_read(&mut stdin, &mut stdout)?;
@@ -84,7 +62,7 @@ fn main() -> Result<(), io::Error> {
         } else {
             let f = File::open(path).unwrap();
             let mut b = BufReader::new(f);
-            if animate {
+            if opt.animate {
                 lol.colorize_read_anim(&mut b, &mut stdout)?;
             } else {
                 lol.colorize_read(&mut b, &mut stdout)?;

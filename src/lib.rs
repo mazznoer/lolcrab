@@ -351,24 +351,7 @@ impl From<Opt> for Lolcrab {
                     .unwrap(),
             )
         } else {
-            match cmd.gradient {
-                Gradient::Cividis => Box::new(colorgrad::preset::cividis()),
-                Gradient::Cool => Box::new(colorgrad::preset::cool()),
-                Gradient::Cubehelix => Box::new(colorgrad::preset::cubehelix_default()),
-                Gradient::Inferno => Box::new(colorgrad::preset::inferno()),
-                Gradient::Magma => Box::new(colorgrad::preset::magma()),
-                Gradient::Plasma => Box::new(colorgrad::preset::plasma()),
-                Gradient::Rainbow => Box::new(colorgrad::preset::rainbow()),
-                Gradient::RdYlGn => Box::new(colorgrad::preset::rd_yl_gn()),
-                Gradient::Sinebow => Box::new(colorgrad::preset::sinebow()),
-                Gradient::Spectral => Box::new(colorgrad::preset::spectral()),
-                Gradient::Turbo => Box::new(colorgrad::preset::turbo()),
-                Gradient::Viridis => Box::new(colorgrad::preset::viridis()),
-                Gradient::Warm => Box::new(colorgrad::preset::warm()),
-                Gradient::Fruits => build_gradient(&[
-                    "#00c21c", "#009dc9", "#ffd43e", "#ff2a70", "#b971ff", "#7ce300", "#feff62",
-                ]),
-            }
+            cmd.gradient.to_gradient()
         };
 
         let grad = if let Some(n) = cmd.sharp {
@@ -401,17 +384,6 @@ fn random_color() -> Color {
     } else {
         Color::from_hwba(fastrand::f32() * 360.0, 0.0, fastrand::f32() * 0.3, 1.0)
     }
-}
-
-#[cfg(feature = "cli")]
-fn build_gradient(colors: &[&str]) -> Box<dyn colorgrad::Gradient> {
-    Box::new(
-        colorgrad::GradientBuilder::new()
-            .html_colors(colors)
-            .mode(colorgrad::BlendMode::Oklab)
-            .build::<colorgrad::CatmullRomGradient>()
-            .unwrap(),
-    )
 }
 
 // Reference http://www.w3.org/TR/2008/REC-WCAG20-20081211/#relativeluminancedef

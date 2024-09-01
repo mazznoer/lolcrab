@@ -50,3 +50,4 @@ unicode-width = "0.1.10"
 [build-dependencies]
 clap = { version = "4.5.9", features = ["derive", "wrap_help"], optional = true }
 clap_complete = { version = "4.5.8", optional = true }
+colorgrad = { version = "0.7.0" }
