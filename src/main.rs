@@ -28,10 +28,17 @@ fn main() -> Result<(), io::Error> {
     let mut lol: Lolcrab = opt.clone().into();
 
     if opt.help {
-        lol.colorize_str(
-            &Opt::command().render_help().ansi().to_string(),
-            &mut stdout,
-        )?;
+        if opt.animate {
+            lol.colorize_read_anim(
+                &mut BufReader::new(Opt::command().render_help().to_string().as_bytes()),
+                &mut stdout,
+            )?;
+        } else {
+            lol.colorize_str(
+                &Opt::command().render_help().ansi().to_string(),
+                &mut stdout,
+            )?;
+        }
         return Ok(());
     }
 
@@ -46,6 +53,7 @@ fn main() -> Result<(), io::Error> {
             let name = if name == "rdylgn" { "rd-yl-gn" } else { &name };
             writeln!(stdout, "\n{name}\n")?;
             lol.gradient = g.to_gradient();
+            lol.randomize_position();
             lol.colorize_str(SAMPLE_TEXT, &mut stdout)?;
         }
         return Ok(());
