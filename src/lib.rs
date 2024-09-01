@@ -83,7 +83,7 @@ impl Lolcrab {
 
     /// Noise scale. Try value between 0.01 .. 0.2
     pub fn set_noise_scale(&mut self, scale: f64) {
-        self.noise_scale = scale;
+        self.noise_scale = scale.clamp(0.001, 0.25);
     }
 
     /// Colorize the background if set to true

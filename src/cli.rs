@@ -64,13 +64,14 @@ pub struct Opt {
     #[arg(name = "File", default_value = "-", value_parser = clap::value_parser!(path::PathBuf))]
     pub files: Vec<path::PathBuf>,
 
-    /// Sets color gradient
+    /// Set color gradient
     #[arg(
         short,
         long,
         value_enum,
         default_value = "rainbow",
-        value_name = "NAME"
+        value_name = "NAME",
+        hide_possible_values = true
     )]
     pub gradient: Gradient,
 
@@ -86,11 +87,11 @@ pub struct Opt {
     #[arg(long, value_name = "NUM")]
     pub sharp: Option<u8>,
 
-    /// Sets noise scale. Try value between 0.01 .. 0.2
+    /// Noise scale (0.01..0.1)
     #[arg(short, long, default_value = "0.034", value_name = "FLOAT")]
     pub scale: f64,
 
-    /// Sets seed [default: random]
+    /// Random seed [default: random]
     #[arg(short = 'S', long, value_name = "NUM")]
     pub seed: Option<u64>,
 
@@ -98,19 +99,19 @@ pub struct Opt {
     #[arg(short = 'i', long)]
     pub invert: bool,
 
-    /// Use random colors as custom gradient [1 .. 100]
-    #[arg(short = 'r', long, value_name = "NUM", value_parser = clap::value_parser!(u8).range(1..=100))]
+    /// Use random colors as custom gradient (1..15)
+    #[arg(short = 'r', long, value_name = "NUM", value_parser = clap::value_parser!(u8).range(1..=15))]
     pub random_colors: Option<u8>,
 
     /// Enable animation mode
     #[arg(short = 'a', long)]
     pub animate: bool,
 
-    /// Animation duration
+    /// Animation duration (1..30) [default: 5]
     #[arg(short = 'd', long, value_name = "NUM")]
     pub duration: Option<u8>,
 
-    /// Animation speed
+    /// Animation speed (30..200) [default: 150]
     #[arg(long)]
     pub speed: Option<u8>,
 
