@@ -2,6 +2,12 @@ use clap::{Parser, ValueEnum};
 use std::path;
 
 #[derive(Debug, Clone, ValueEnum)]
+pub enum Mode {
+    Linear,
+    Noise,
+}
+
+#[derive(Debug, Clone, ValueEnum)]
 pub enum Gradient {
     Cividis,
     Cool,
@@ -63,6 +69,16 @@ pub struct Opt {
     /// Files to read
     #[arg(name = "File", default_value = "-", value_parser = clap::value_parser!(path::PathBuf))]
     pub files: Vec<path::PathBuf>,
+
+    /// Set mode
+    #[arg(
+        short = 'm',
+        long,
+        value_enum,
+        default_value = "noise",
+        value_name = "MODE"
+    )]
+    pub mode: Mode,
 
     /// Set color gradient
     #[arg(

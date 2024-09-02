@@ -11,6 +11,7 @@
 //! ```
 //!
 
+use std::f32::consts::TAU;
 use std::io::{prelude::*, Write};
 use std::{thread, time};
 
@@ -27,7 +28,7 @@ use std::process;
 mod cli;
 
 #[cfg(feature = "cli")]
-pub use cli::{Gradient, Opt};
+pub use cli::{Gradient, Mode, Opt};
 
 /// # Example
 ///
@@ -56,10 +57,16 @@ pub struct Lolcrab {
     noise_scale: f64,
     invert: bool,
     tab_width: isize,
-    anim_duration: usize,
-    anim_sleep: time::Duration,
     x: isize,
     y: isize,
+
+    linear: bool,
+    shift_x: f32,
+    shift_y: f32,
+    offset: f32,
+
+    anim_duration: usize,
+    anim_sleep: time::Duration,
 }
 
 impl Lolcrab {
@@ -68,16 +75,24 @@ impl Lolcrab {
         gradient: Option<Box<dyn colorgrad::Gradient>>,
         ns: Option<Box<dyn noise::NoiseFn<f64, 2>>>,
     ) -> Self {
+        let angle = fastrand::f32() * TAU;
+        let distance = 0.017;
         Self {
             gradient: gradient.unwrap_or(Box::new(colorgrad::preset::rainbow())),
             noise: ns.unwrap_or(Box::new(noise::OpenSimplex::new(fastrand::u32(..)))),
             noise_scale: 0.034,
             invert: false,
             tab_width: 4,
-            anim_duration: 5,
-            anim_sleep: time::Duration::from_millis(150),
             x: 0,
             y: 0,
+
+            linear: false,
+            shift_x: angle.cos() * distance / 2.0,
+            shift_y: angle.sin() * distance,
+            offset: fastrand::f32(),
+
+            anim_duration: 5,
+            anim_sleep: time::Duration::from_millis(150),
         }
     }
 
@@ -104,6 +119,11 @@ impl Lolcrab {
     /// Animation duration (1..30)
     pub fn set_anim_duration(&mut self, duration: usize) {
         self.anim_duration = duration.clamp(1, 30);
+    }
+
+    /// Linear mode
+    pub fn set_linear(&mut self, b: bool) {
+        self.linear = b;
     }
 
     #[doc(hidden)]
@@ -135,6 +155,11 @@ impl Lolcrab {
 
     #[doc(hidden)]
     pub fn get_color(&mut self) -> Color {
+        if self.linear {
+            let position =
+                self.offset + self.x as f32 * self.shift_x + self.y as f32 * self.shift_y;
+            return self.gradient.at(position);
+        }
         let position = self.noise.get([
             self.x as f64 * self.noise_scale,
             self.y as f64 * self.noise_scale * 2.0,
@@ -372,6 +397,9 @@ impl From<Opt> for Lolcrab {
         }
         if let Some(duration) = cmd.duration {
             lol.set_anim_duration(duration as usize);
+        }
+        if let Mode::Linear = cmd.mode {
+            lol.set_linear(true);
         }
         lol
     }
