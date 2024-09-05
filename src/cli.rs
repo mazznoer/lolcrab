@@ -1,5 +1,24 @@
-use clap::{Parser, ValueEnum};
+use std::f32::consts::{FRAC_PI_3, PI};
 use std::path;
+
+use clap::{Parser, ValueEnum};
+use colorgrad::Color;
+
+const PI2_3: f32 = PI * 2.0 / 3.0;
+
+struct LolcatGradient {}
+
+impl colorgrad::Gradient for LolcatGradient {
+    fn at(&self, t: f32) -> Color {
+        let t = (0.5 - t) * PI;
+        Color::new(
+            (t + FRAC_PI_3).sin().powi(2).clamp(0.0, 1.0),
+            t.sin().powi(2).clamp(0.0, 1.0),
+            (t + PI2_3).sin().powi(2).clamp(0.0, 1.0),
+            1.0,
+        )
+    }
+}
 
 #[derive(Debug, Clone, ValueEnum)]
 pub enum Mode {
@@ -14,6 +33,7 @@ pub enum Gradient {
     Cubehelix,
     Fruits,
     Inferno,
+    Lolcat,
     Magma,
     Plasma,
     Rainbow,
@@ -32,6 +52,7 @@ impl Gradient {
             Gradient::Cool => Box::new(colorgrad::preset::cool()),
             Gradient::Cubehelix => Box::new(colorgrad::preset::cubehelix_default()),
             Gradient::Inferno => Box::new(colorgrad::preset::inferno()),
+            Gradient::Lolcat => Box::new(LolcatGradient {}),
             Gradient::Magma => Box::new(colorgrad::preset::magma()),
             Gradient::Plasma => Box::new(colorgrad::preset::plasma()),
             Gradient::Rainbow => Box::new(colorgrad::preset::rainbow()),
