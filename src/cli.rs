@@ -131,6 +131,14 @@ pub struct Opt {
     #[arg(long)]
     pub speed: Option<u8>,
 
+    /// Angle in degrees (0..360) [default: random]
+    #[arg(short = 'A', long, value_name = "ANGLE", help_heading = Some("Linear Mode"))]
+    pub angle: Option<f32>,
+
+    /// Spread (0..100) [default: 13]
+    #[arg(long, help_heading = Some("Linear Mode"))]
+    pub spread: Option<f32>,
+
     /// Print help
     #[arg(short = 'h', long)]
     pub help: bool,

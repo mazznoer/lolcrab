@@ -64,6 +64,8 @@ pub struct Lolcrab {
     shift_x: f32,
     shift_y: f32,
     offset: f32,
+    angle: f32,
+    distance: f32,
 
     anim_duration: usize,
     anim_sleep: time::Duration,
@@ -90,6 +92,8 @@ impl Lolcrab {
             shift_x: angle.cos() * distance / 2.0,
             shift_y: angle.sin() * distance,
             offset: fastrand::f32(),
+            angle,
+            distance,
 
             anim_duration: 5,
             anim_sleep: time::Duration::from_millis(150),
@@ -126,6 +130,23 @@ impl Lolcrab {
         self.linear = b;
     }
 
+    fn calc_shift(&mut self) {
+        self.shift_x = self.angle.cos() * self.distance / 2.0;
+        self.shift_y = self.angle.sin() * self.distance;
+    }
+
+    /// Sets angle in degrees (0..360)
+    pub fn set_angle(&mut self, angle: f32) {
+        self.angle = angle.to_radians();
+        self.calc_shift();
+    }
+
+    /// Sets spread (0..100)
+    pub fn set_spread(&mut self, distance: f32) {
+        self.distance = remap(distance, 0.0, 100.0, 0.005, 0.1);
+        self.calc_shift();
+    }
+
     #[doc(hidden)]
     pub fn step_col(&mut self, n_col: isize) {
         self.x += n_col;
@@ -158,7 +179,7 @@ impl Lolcrab {
         if self.linear {
             let position =
                 self.offset + self.x as f32 * self.shift_x + self.y as f32 * self.shift_y;
-            return self.gradient.at(position);
+            return self.gradient.repeat_at(position);
         }
         let position = self.noise.get([
             self.x as f64 * self.noise_scale,
@@ -400,6 +421,12 @@ impl From<Opt> for Lolcrab {
         }
         if let Mode::Linear = cmd.mode {
             lol.set_linear(true);
+            if let Some(angle) = cmd.angle {
+                lol.set_angle(angle);
+            }
+            if let Some(spread) = cmd.spread {
+                lol.set_spread(spread);
+            }
         }
         lol
     }
