@@ -177,9 +177,8 @@ impl Lolcrab {
     #[doc(hidden)]
     pub fn get_color(&mut self) -> Color {
         if self.linear {
-            let position =
-                self.offset + self.x as f32 * self.shift_x + self.y as f32 * self.shift_y;
-            return self.gradient.repeat_at(position);
+            let t = self.offset + self.x as f32 * self.shift_x + self.y as f32 * self.shift_y;
+            return self.gradient.at(modulo(t, 1.0));
         }
         let position = self.noise.get([
             self.x as f64 * self.noise_scale,
@@ -457,6 +456,11 @@ fn color_luminance(col: &Color) -> f32 {
 // Map t from range [a, b] to range [c, d]
 fn remap(t: f32, a: f32, b: f32, c: f32, d: f32) -> f32 {
     (t - a) * ((d - c) / (b - a)) + c
+}
+
+#[inline]
+fn modulo(x: f32, y: f32) -> f32 {
+    (x % y + y) % y
 }
 
 #[cfg(test)]
