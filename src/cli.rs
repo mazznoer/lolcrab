@@ -21,12 +21,6 @@ impl colorgrad::Gradient for LolcatGradient {
 }
 
 #[derive(Debug, Clone, ValueEnum)]
-pub enum Mode {
-    Linear,
-    Noise,
-}
-
-#[derive(Debug, Clone, ValueEnum)]
 pub enum Gradient {
     Cividis,
     Cool,
@@ -91,16 +85,6 @@ pub struct Opt {
     #[arg(name = "File", default_value = "-", value_parser = clap::value_parser!(path::PathBuf))]
     pub files: Vec<path::PathBuf>,
 
-    /// Set mode
-    #[arg(
-        short = 'm',
-        long,
-        value_enum,
-        default_value = "noise",
-        value_name = "MODE"
-    )]
-    pub mode: Mode,
-
     /// Set color gradient
     #[arg(
         short,
@@ -151,6 +135,10 @@ pub struct Opt {
     /// Animation speed (30..200) [default: 150]
     #[arg(long)]
     pub speed: Option<u8>,
+
+    /// Activate linear mode
+    #[arg(short = 'l', long, help_heading = Some("Linear Mode"))]
+    pub linear: bool,
 
     /// Angle in degrees (0..360) [default: random]
     #[arg(short = 'A', long, value_name = "ANGLE", help_heading = Some("Linear Mode"))]

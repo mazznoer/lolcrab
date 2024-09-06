@@ -28,7 +28,7 @@ use std::process;
 mod cli;
 
 #[cfg(feature = "cli")]
-pub use cli::{Gradient, Mode, Opt};
+pub use cli::{Gradient, Opt};
 
 /// # Example
 ///
@@ -419,7 +419,7 @@ impl From<Opt> for Lolcrab {
         if let Some(duration) = cmd.duration {
             lol.set_anim_duration(duration as usize);
         }
-        if let Mode::Linear = cmd.mode {
+        if cmd.linear {
             lol.set_linear(true);
             if let Some(angle) = cmd.angle {
                 lol.set_angle(angle);
