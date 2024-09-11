@@ -395,6 +395,8 @@ impl From<Opt> for Lolcrab {
                     .build::<colorgrad::CatmullRomGradient>()
                     .unwrap(),
             )
+        } else if cmd.lolcat {
+            Gradient::Lolcat.to_gradient()
         } else {
             cmd.gradient.to_gradient()
         };
@@ -418,7 +420,7 @@ impl From<Opt> for Lolcrab {
         if let Some(duration) = cmd.duration {
             lol.set_anim_duration(duration as usize);
         }
-        if cmd.linear {
+        if cmd.linear || cmd.lolcat {
             lol.set_linear(true);
             if let Some(angle) = cmd.angle {
                 lol.set_angle(angle);

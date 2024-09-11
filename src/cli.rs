@@ -124,6 +124,10 @@ pub struct Opt {
     #[arg(short = 'r', long, value_name = "NUM", value_parser = clap::value_parser!(u8).range(1..=15))]
     pub random_colors: Option<u8>,
 
+    /// Lolcat mode (equal to: --linear --gradient lolcat)
+    #[arg(short = 'L', long)]
+    pub lolcat: bool,
+
     /// Enable animation mode
     #[arg(short = 'a', long)]
     pub animate: bool,
