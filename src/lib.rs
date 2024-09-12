@@ -147,6 +147,11 @@ impl Lolcrab {
         self.calc_shift();
     }
 
+    /// Sets color gradient offset (0..1)
+    pub fn set_offset(&mut self, offset: f32) {
+        self.offset = offset.clamp(0.0, 1.0);
+    }
+
     #[doc(hidden)]
     pub fn step_col(&mut self, n_col: isize) {
         self.x += n_col;
@@ -427,6 +432,9 @@ impl From<Opt> for Lolcrab {
             }
             if let Some(spread) = cmd.spread {
                 lol.set_spread(spread);
+            }
+            if let Some(offset) = cmd.offset {
+                lol.set_offset(offset);
             }
         }
         lol

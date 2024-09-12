@@ -148,9 +148,13 @@ pub struct Opt {
     #[arg(short = 'A', long, value_name = "ANGLE", help_heading = Some("Linear Mode"))]
     pub angle: Option<f32>,
 
-    /// Spread (0..100) [default: 13]
+    /// Gradient spread (0..100) [default: 13]
     #[arg(long, help_heading = Some("Linear Mode"))]
     pub spread: Option<f32>,
+
+    /// Gradient offset (0..1) [default: random]
+    #[arg(long, help_heading = Some("Linear Mode"))]
+    pub offset: Option<f32>,
 
     /// Print help
     #[arg(short = 'h', long)]
