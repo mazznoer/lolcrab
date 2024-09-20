@@ -425,17 +425,20 @@ impl From<Opt> for Lolcrab {
         if let Some(duration) = cmd.duration {
             lol.set_anim_duration(duration as usize);
         }
+        if let Some(angle) = cmd.angle {
+            lol.set_linear(true);
+            lol.set_angle(angle);
+        }
+        if let Some(spread) = cmd.spread {
+            lol.set_linear(true);
+            lol.set_spread(spread);
+        }
+        if let Some(offset) = cmd.offset {
+            lol.set_linear(true);
+            lol.set_offset(offset);
+        }
         if cmd.linear || cmd.lolcat {
             lol.set_linear(true);
-            if let Some(angle) = cmd.angle {
-                lol.set_angle(angle);
-            }
-            if let Some(spread) = cmd.spread {
-                lol.set_spread(spread);
-            }
-            if let Some(offset) = cmd.offset {
-                lol.set_offset(offset);
-            }
         }
         lol
     }
