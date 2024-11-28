@@ -6,6 +6,7 @@ use colorgrad::Color;
 
 const PI2_3: f32 = PI * 2.0 / 3.0;
 
+#[derive(Clone)]
 struct LolcatGradient {}
 
 impl colorgrad::Gradient for LolcatGradient {
