@@ -4,7 +4,7 @@ use clap::{CommandFactory, Parser, ValueEnum};
 use lolcrab::{Gradient, Lolcrab, Opt};
 use std::{
     fs::File,
-    io::{self, BufReader, Write},
+    io::{self, BufReader, IsTerminal, Write},
     path::PathBuf,
 };
 
@@ -51,10 +51,14 @@ fn main() -> Result<(), io::Error> {
         for g in Gradient::value_variants() {
             let name = format!("{g:?}").to_lowercase();
             let name = if name == "rdylgn" { "rd-yl-gn" } else { &name };
-            writeln!(stdout, "\n{name}\n")?;
-            lol.gradient = g.to_gradient();
-            lol.randomize_position();
-            lol.colorize_str(SAMPLE_TEXT, &mut stdout)?;
+            if stdout.is_terminal() {
+                writeln!(stdout, "\n{name}\n")?;
+                lol.gradient = g.to_gradient();
+                lol.randomize_position();
+                lol.colorize_str(SAMPLE_TEXT, &mut stdout)?;
+            } else {
+                writeln!(stdout, "{name}")?;
+            }
         }
         return Ok(());
     }
