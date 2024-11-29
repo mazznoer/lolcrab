@@ -46,7 +46,7 @@ fastrand = "2.1.0"
 mimalloc = { version = "0.1.37", optional = true, default-features = false }
 noise = { version = "0.9.0", default-features = false }
 unicode-segmentation = "1.10.1"
-unicode-width = "0.1.10"
+unicode-width = "0.2.0"
 
 [build-dependencies]
 clap = { version = "4.5.9", features = ["derive", "wrap_help"], optional = true }
