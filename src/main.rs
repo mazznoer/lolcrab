@@ -1,16 +1,45 @@
 #![warn(clippy::pedantic, clippy::nursery)]
 
+use std::ffi::OsString;
+use std::fs::File;
+use std::io::{self, BufRead, BufReader, IsTerminal, Write};
+use std::path::PathBuf;
+
 use clap::{CommandFactory, Parser, ValueEnum};
 use lolcrab::{Gradient, Lolcrab, Opt};
-use std::{
-    fs::File,
-    io::{self, BufReader, IsTerminal, Write},
-    path::PathBuf,
-};
 
 #[cfg(feature = "mimalloc")]
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+
+fn config_file() -> PathBuf {
+    std::env::var("LOLCRAB_CONFIG_PATH")
+        .ok()
+        .map(PathBuf::from)
+        .filter(|config_path| config_path.is_file())
+        .unwrap_or_else(|| dirs::config_dir().unwrap().join("lolcrab").join("config"))
+}
+
+fn read_config_file() -> Vec<OsString> {
+    let file = File::open(config_file()).unwrap();
+    let reader = BufReader::new(file);
+    let mut args = Vec::new();
+
+    for line in reader.lines() {
+        let line = line.unwrap();
+        let line = line.trim();
+        if line.is_empty() || line.starts_with('#') {
+            continue;
+        }
+        if let Some(line_args) = shlex::split(line) {
+            args.extend(line_args.into_iter().map(OsString::from));
+        } else {
+            eprintln!("Failed to parse config line '{line}'");
+        }
+    }
+
+    args
+}
 
 const SAMPLE_TEXT: &str = "\
 oooo............oooo...github.com/mazznoer/lolcrab...o8.
@@ -23,7 +52,12 @@ o888o.`Y8bod8P'.o888o.`Y8bod8P'.d888b....`Y888''8o..`Y8bod8P.
 ";
 
 fn main() -> Result<(), io::Error> {
-    let opt = Opt::parse();
+    let mut args_cfg = read_config_file();
+    let mut args_cli = std::env::args_os();
+    args_cfg.insert(0, args_cli.next().unwrap());
+    args_cfg.extend(args_cli);
+
+    let opt = Opt::parse_from(args_cfg);
     let mut stdout = io::stdout().lock();
     let mut lol: Lolcrab = opt.clone().into();
 
@@ -44,6 +78,16 @@ fn main() -> Result<(), io::Error> {
 
     if opt.version {
         lol.colorize_str(&Opt::command().render_long_version(), &mut stdout)?;
+        return Ok(());
+    }
+
+    if opt.config_file {
+        let cfg_path = format!("{}\n", config_file().display());
+        if stdout.is_terminal() {
+            lol.colorize_str(&cfg_path, &mut stdout)?;
+        } else {
+            write!(stdout, "{cfg_path}")?;
+        }
         return Ok(());
     }
 

@@ -157,6 +157,10 @@ pub struct Opt {
     #[arg(long, help_heading = Some("Linear Mode"))]
     pub offset: Option<f32>,
 
+    /// Print config file location
+    #[arg(long)]
+    pub config_file: bool,
+
     /// Print help
     #[arg(short = 'h', long)]
     pub help: bool,
