@@ -25,6 +25,9 @@ fn read_config_file() -> Vec<OsString> {
     let Some(path) = config_file() else {
         return args;
     };
+    if !path.exists() {
+        return args;
+    }
     let file = File::open(path).unwrap();
     let reader = BufReader::new(file);
 
