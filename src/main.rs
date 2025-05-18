@@ -12,18 +12,21 @@ use lolcrab::{Gradient, Lolcrab, Opt};
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-fn config_file() -> PathBuf {
+fn config_file() -> Option<PathBuf> {
     std::env::var("LOLCRAB_CONFIG_PATH")
         .ok()
         .map(PathBuf::from)
         .filter(|config_path| config_path.is_file())
-        .unwrap_or_else(|| dirs::config_dir().unwrap().join("lolcrab").join("config"))
+        .or_else(|| Some(dirs::config_dir()?.join("lolcrab").join("config")))
 }
 
 fn read_config_file() -> Vec<OsString> {
-    let file = File::open(config_file()).unwrap();
-    let reader = BufReader::new(file);
     let mut args = Vec::new();
+    let Some(path) = config_file() else {
+        return args;
+    };
+    let file = File::open(path).unwrap();
+    let reader = BufReader::new(file);
 
     for line in reader.lines() {
         let line = line.unwrap();
@@ -82,7 +85,10 @@ fn main() -> Result<(), io::Error> {
     }
 
     if opt.config_file {
-        let cfg_path = format!("{}\n", config_file().display());
+        let Some(cfg_path) = config_file() else {
+            return Ok(());
+        };
+        let cfg_path = format!("{}\n", cfg_path.display());
         if stdout.is_terminal() {
             lol.colorize_str(&cfg_path, &mut stdout)?;
         } else {
