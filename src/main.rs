@@ -65,6 +65,9 @@ fn main() -> Result<(), io::Error> {
 
     let opt = Opt::parse_from(args_cfg);
     let mut stdout = io::stdout().lock();
+    let is_terminal = stdout.is_terminal();
+    let mut stdout = io::BufWriter::new(&mut stdout);
+
     let mut lol: Lolcrab = opt.clone().into();
 
     if opt.help {
@@ -79,11 +82,13 @@ fn main() -> Result<(), io::Error> {
                 &mut stdout,
             )?;
         }
+        stdout.flush()?;
         return Ok(());
     }
 
     if opt.version {
         lol.colorize_str(&Opt::command().render_long_version(), &mut stdout)?;
+        stdout.flush()?;
         return Ok(());
     }
 
@@ -92,11 +97,12 @@ fn main() -> Result<(), io::Error> {
             return Ok(());
         };
         let cfg_path = format!("{}\n", cfg_path.display());
-        if stdout.is_terminal() {
+        if is_terminal {
             lol.colorize_str(&cfg_path, &mut stdout)?;
         } else {
             write!(stdout, "{cfg_path}")?;
         }
+        stdout.flush()?;
         return Ok(());
     }
 
@@ -104,7 +110,7 @@ fn main() -> Result<(), io::Error> {
         for g in Gradient::value_variants() {
             let name = format!("{g:?}").to_lowercase();
             let name = if name == "rdylgn" { "rd-yl-gn" } else { &name };
-            if stdout.is_terminal() {
+            if is_terminal {
                 writeln!(stdout, "\n{name}\n")?;
                 lol.gradient = g.to_gradient();
                 lol.randomize_position();
@@ -113,6 +119,7 @@ fn main() -> Result<(), io::Error> {
                 writeln!(stdout, "{name}")?;
             }
         }
+        stdout.flush()?;
         return Ok(());
     }
 
@@ -135,5 +142,6 @@ fn main() -> Result<(), io::Error> {
         }
     }
 
+    stdout.flush()?;
     Ok(())
 }
