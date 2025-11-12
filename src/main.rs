@@ -124,7 +124,8 @@ fn main() -> Result<(), io::Error> {
     }
 
     for path in opt.files {
-        if path == "-" {
+        #[allow(clippy::cmp_owned)]
+        if path == PathBuf::from("-") {
             let mut stdin = io::stdin().lock();
             if opt.animate {
                 lol.colorize_read_anim(&mut stdin, &mut stdout)?;
